@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦷 DentalPro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *{font-family:'DM Sans',sans-serif;box-sizing:border-box;margin:0;padding:0;}
+        h1,h2,h3,h4{font-family:'Sora',sans-serif;}
+        body{background:#f0f4ff;min-height:100vh;}
+        .gradient-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 60%,#a855f7 100%);}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+        @keyframes spin{to{transform:rotate(360deg);}}
+        @keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:0.4;}}
+        .fade-up{animation:fadeUp 0.5s ease forwards;}
+        #loading{position:fixed;inset:0;background:linear-gradient(135deg,#4f46e5,#7c3aed,#a855f7);display:flex;align-items:center;justify-content:center;z-index:9999;}
+        .spinner{width:60px;height:60px;border:4px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.9s linear infinite;}
+        .nav-tab{display:flex;flex-direction:column;align-items:center;padding:10px 22px;border-radius:16px;font-weight:600;font-size:13px;color:#6b7280;cursor:pointer;white-space:nowrap;transition:all 0.25s;background:transparent;border:none;gap:4px;}
+        .nav-tab:hover{background:rgba(79,70,229,0.08);color:#4f46e5;}
+        .nav-tab.active{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;box-shadow:0 8px 20px rgba(79,70,229,0.35);}
+        .nav-tab .emoji{font-size:20px;}
+        .card{background:white;border-radius:24px;box-shadow:0 4px 24px rgba(0,0,0,0.07);border:1px solid rgba(0,0,0,0.05);}
+        .kpi{border-radius:20px;padding:24px;color:white;transition:transform 0.2s;}
+        .kpi:hover{transform:translateY(-4px);}
+        .input-field{width:100%;padding:11px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;font-family:'DM Sans',sans-serif;transition:all 0.2s;background:#fafafa;color:#111;outline:none;}
+        .input-field:focus{border-color:#4f46e5;background:white;box-shadow:0 0 0 4px rgba(79,70,229,0.1);}
+        .input-field::placeholder{color:#9ca3af;}
+        .input-field:read-only{background:#f1f5f9;color:#6b7280;cursor:not-allowed;}
+        label.field-label{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;display:block;}
+        .btn-primary{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;border:none;border-radius:14px;padding:12px 24px;font-weight:700;font-size:14px;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 14px rgba(79,70,229,0.4);}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(79,70,229,0.45);}
+        .btn-success{background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;border-radius:14px;padding:12px 24px;font-weight:700;font-size:14px;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 14px rgba(16,185,129,0.35);}
+        .btn-success:hover{transform:translateY(-2px);}
+        .btn-orange{background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;border-radius:14px;padding:12px 24px;font-weight:700;font-size:14px;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 14px rgba(249,115,22,0.35);}
+        .btn-orange:hover{transform:translateY(-2px);}
+        .btn-excel{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:white;border:none;border-radius:12px;padding:10px 20px;font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s;}
+        .btn-excel:hover{transform:translateY(-1px);}
+        .btn-sm{padding:6px 12px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;}
+        .btn-view{background:#eff6ff;color:#2563eb;}.btn-view:hover{background:#dbeafe;}
+        .btn-edit{background:#fefce8;color:#d97706;}.btn-edit:hover{background:#fef3c7;}
+        .btn-delete{background:#fef2f2;color:#dc2626;}.btn-delete:hover{background:#fee2e2;}
+        table{width:100%;border-collapse:collapse;}
+        thead tr{background:#f8fafc;}
+        th{padding:13px 14px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f1f5f9;}
+        td{padding:13px 14px;font-size:13px;color:#374151;border-bottom:1px solid #f8fafc;}
+        tbody tr:hover{background:#fafbff;}
+        tbody tr:last-child td{border-bottom:none;}
+        .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;}
+        .badge-green{background:#dcfce7;color:#16a34a;}
+        .badge-blue{background:#dbeafe;color:#1d4ed8;}
+        .badge-orange{background:#ffedd5;color:#ea580c;}
+        .badge-purple{background:#f3e8ff;color:#7c3aed;}
+        .notif{position:fixed;top:24px;right:24px;background:linear-gradient(135deg,#10b981,#059669);color:white;padding:14px 22px;border-radius:16px;font-weight:700;font-size:13px;z-index:9999;box-shadow:0 10px 30px rgba(16,185,129,0.4);animation:fadeUp 0.4s ease;}
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);z-index:800;display:flex;align-items:center;justify-content:center;}
+        .modal{background:white;border-radius:28px;padding:36px;width:90%;max-width:700px;max-height:92vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,0.2);}
+        .modal-sm{max-width:520px;}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+        .modal-title{font-size:22px;font-weight:800;color:#111;}
+        .modal-close{background:#f1f5f9;border:none;border-radius:10px;width:34px;height:34px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;}
+        .modal-close:hover{background:#e2e8f0;}
+        .tab-content.hidden{display:none!important;}
+        .tab-content{min-height:70vh;}
+        ::-webkit-scrollbar{width:6px;}
+        ::-webkit-scrollbar-track{background:#f1f5f9;border-radius:6px;}
+        ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px;}
+        .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+        .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+        @media(max-width:640px){.form-grid,.form-grid-3{grid-template-columns:1fr;}}
+        .required-star{color:#ef4444;}
+        .pac-info-block{background:linear-gradient(135deg,#f0f4ff,#e8ecff);border:1px solid #c7d2fe;border-radius:16px;padding:16px 20px;display:flex;gap:16px;align-items:center;}
+        .pac-avatar{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:18px;flex-shrink:0;}
+        .search-dropdown{position:absolute;top:100%;left:0;right:0;background:white;border:2px solid #4f46e5;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,0.15);z-index:100;max-height:220px;overflow-y:auto;margin-top:4px;}
+        .search-item{padding:12px 16px;cursor:pointer;transition:background 0.15s;display:flex;align-items:center;gap:12px;font-size:14px;}
+        .search-item:hover{background:#f0f4ff;}
+        .search-item:not(:last-child){border-bottom:1px solid #f1f5f9;}
+        .cita-card{background:white;border-radius:18px;border:1px solid #e5e7eb;padding:20px;transition:all 0.2s;box-shadow:0 2px 10px rgba(0,0,0,0.05);}
+        .cita-card:hover{box-shadow:0 6px 20px rgba(0,0,0,0.1);transform:translateY(-2px);}
+        .status-pending{background:#ffedd5;color:#ea580c;}
+        .status-done{background:#dcfce7;color:#16a34a;}
+        .status-cancel{background:#fef2f2;color:#dc2626;}
+    </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading">
+    <div style="text-align:center;color:white;">
+        <div class="spinner" style="margin:0 auto 20px;"></div>
+        <div style="font-size:28px;font-weight:800;font-family:'Sora',sans-serif;">DentalPro</div>
+        <div style="opacity:0.8;margin-top:6px;">Cargando sistema...</div>
+    </div>
+</div>
+
+<!-- Header -->
+<header class="gradient-primary" style="position:sticky;top:0;z-index:200;box-shadow:0 4px 30px rgba(79,70,229,0.4);">
+    <div style="max-width:1280px;margin:0 auto;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:14px;">
+            <div style="width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;">🦷</div>
+            <div>
+                <div style="font-size:22px;font-weight:800;color:white;font-family:'Sora',sans-serif;line-height:1;">DentalPro</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:2px;">Gestión Administrativa · Contable · Excel</div>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <button onclick="exportarTodo()" style="background:rgba(255,255,255,0.18);color:white;border:1px solid rgba(255,255,255,0.25);border-radius:12px;padding:9px 18px;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;">
+                <span>📊</span><span>Exportar Todo</span>
+            </button>
+            <div style="width:10px;height:10px;background:#4ade80;border-radius:50%;animation:pulse-dot 2s infinite;"></div>
+        </div>
+    </div>
+</header>
+
+<!-- Nav -->
+<nav style="background:white;border-bottom:1px solid #f1f5f9;box-shadow:0 2px 12px rgba(0,0,0,0.04);position:sticky;top:80px;z-index:190;">
+    <div style="max-width:1280px;margin:0 auto;padding:0 28px;">
+        <div style="display:flex;gap:4px;padding:10px 0;overflow-x:auto;">
+            <button class="nav-tab active" data-tab="dashboard"><span class="emoji">📊</span>Dashboard</button>
+            <button class="nav-tab" data-tab="pacientes"><span class="emoji">👥</span>Pacientes</button>
+            <button class="nav-tab" data-tab="citas"><span class="emoji">📅</span>Citas</button>
+            <button class="nav-tab" data-tab="tratamientos"><span class="emoji">💉</span>Tratamientos</button>
+            <button class="nav-tab" data-tab="ing-egr"><span class="emoji">📦</span>Ingresos & Egresos</button>
+            
+            <button class="nav-tab" data-tab="reportes"><span class="emoji">📈</span>Reportes</button>
+        </div>
+    </div>
+</nav>
+
+<!-- Contenido -->
+<div style="max-width:1280px;margin:0 auto;padding:32px 28px;">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div id="dashboard" class="tab-content fade-up">
+        <h2 style="font-size:34px;font-weight:800;color:#111;margin-bottom:28px;">Dashboard Ejecutivo</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px;margin-bottom:28px;" id="kpis"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;">
+            <div class="card" style="padding:26px;">
+                <h3 style="font-size:17px;font-weight:700;margin-bottom:18px;color:#111;">📈 Distribución por Tratamiento</h3>
+                <canvas id="chartIngresos" height="260"></canvas>
+            </div>
+            <div class="card" style="padding:26px;">
+                <h3 style="font-size:17px;font-weight:700;margin-bottom:14px;color:#111;">📅 Últimas Citas Registradas</h3>
+                <div id="ultimas-citas-dash"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== PACIENTES ===== -->
+    <div id="pacientes" class="tab-content hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+            <h2 style="font-size:34px;font-weight:800;color:#111;">👥 Pacientes</h2>
+            <button class="btn-success" onclick="abrirModalPaciente()" style="display:flex;align-items:center;gap:8px;font-size:14px;padding:12px 24px;">
+                ➕ Nuevo Paciente
+            </button>
+        </div>
+        <div class="card" style="overflow:hidden;">
+            <div style="padding:18px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:1px solid #f1f5f9;">
+                <div style="font-size:17px;font-weight:700;color:#111;">
+                    📋 Registro de Pacientes
+                    <span id="total-pac-badge" style="background:#eff6ff;color:#2563eb;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;margin-left:8px;"></span>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <input id="buscar-pacientes" placeholder="🔍 Buscar paciente..." class="input-field" style="width:260px;padding:9px 14px;">
+                    <button class="btn-excel" onclick="exportarPacientes()">📥 Excel</button>
+                </div>
+            </div>
+            <div style="overflow-x:auto;">
+                <table id="tabla-pacientes">
+                    <thead>
+                        <tr>
+                            <th>#</th><th>Paciente</th><th>Documento</th><th>Teléfono</th>
+                            <th>Email</th><th>Edad</th><th>Citas</th><th>Total Gastado</th><th style="text-align:right;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-pacientes"></tbody>
+                </table>
+            </div>
+            <div id="pac-empty" style="display:none;text-align:center;padding:52px;color:#9ca3af;">
+                <div style="font-size:44px;margin-bottom:10px;">🔍</div>
+                <div style="font-weight:600;">No se encontraron pacientes</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== CITAS ===== -->
+    <div id="citas" class="tab-content hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+            <h2 style="font-size:34px;font-weight:800;color:#111;">📅 Citas</h2>
+            <div style="display:flex;gap:10px;">
+                <button class="btn-excel" onclick="exportarCitas()">📥 Excel Citas</button>
+                <button class="btn-orange" onclick="abrirModalCita()" style="display:flex;align-items:center;gap:8px;font-size:14px;padding:12px 22px;">
+                    ➕ Nueva Cita
+                </button>
+            </div>
+        </div>
+
+        <!-- Filtro búsqueda citas -->
+        <div class="card" style="padding:18px 22px;margin-bottom:22px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <input id="buscar-citas" placeholder="🔍 Buscar por paciente o documento..." class="input-field" style="max-width:320px;padding:9px 14px;" oninput="renderCitas()">
+            <select id="filtro-estado" class="input-field" style="max-width:180px;padding:9px 14px;" onchange="renderCitas()">
+                <option value="">Todos los estados</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Completada">Completada</option>
+                <option value="Cancelada">Cancelada</option>
+            </select>
+            <div id="kpi-citas" style="display:flex;gap:12px;margin-left:auto;flex-wrap:wrap;"></div>
+        </div>
+
+        <!-- Tabla citas -->
+        <div class="card" style="overflow:hidden;">
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th><th>Paciente</th><th>Documento</th><th>Edad</th>
+                            <th>Fecha Cita</th><th>Detalle</th><th>Monto</th>
+                            <th>Estado</th><th>Observaciones</th><th style="text-align:right;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-citas"></tbody>
+                </table>
+            </div>
+            <div id="citas-empty" style="display:none;text-align:center;padding:52px;color:#9ca3af;">
+                <div style="font-size:44px;margin-bottom:10px;">📅</div>
+                <div style="font-weight:600;margin-bottom:6px;">No hay citas registradas</div>
+                <div style="font-size:13px;">Haz clic en "Nueva Cita" para comenzar</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRATAMIENTOS -->
+    <div id="tratamientos" class="tab-content hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+            <h2 style="font-size:34px;font-weight:800;color:#111;">💉 Tratamientos</h2>
+            <div style="display:flex;gap:10px;">
+                <button class="btn-excel" onclick="exportarTratamientos()">📥 Excel Tratamientos</button>
+                <button class="btn-primary" onclick="abrirModalTratamiento()" style="display:flex;align-items:center;gap:8px;font-size:14px;padding:12px 22px;">
+                    ➕ Nuevo Tratamiento
+                </button>
+            </div>
+        </div>
+
+        <!-- KPIs de tratamientos -->
+        <div id="kpi-tratamientos" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px;"></div>
+
+        <!-- Filtro -->
+        <div class="card" style="padding:16px 22px;margin-bottom:22px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <input id="buscar-tratamientos" placeholder="🔍 Buscar por paciente, documento o cita..." class="input-field" style="max-width:340px;padding:9px 14px;" oninput="renderTratamientos()">
+            <select id="filtro-trat-estado" class="input-field" style="max-width:180px;padding:9px 14px;" onchange="renderTratamientos()">
+                <option value="">Todos los estados</option>
+                <option value="En curso">En curso</option>
+                <option value="Completado">Completado</option>
+                <option value="Cancelado">Cancelado</option>
+            </select>
+        </div>
+
+        <!-- Lista de tratamientos -->
+        <div id="trat-lista"></div>
+        <div id="trat-empty" style="display:none;text-align:center;padding:52px;color:#9ca3af;">
+            <div style="font-size:44px;margin-bottom:10px;">💉</div>
+            <div style="font-weight:600;margin-bottom:6px;">No hay tratamientos registrados</div>
+            <div style="font-size:13px;">Haz clic en "Nuevo Tratamiento" para comenzar</div>
+        </div>
+    </div>
+
+    <!-- INGRESOS & EGRESOS -->
+    <div id="ing-egr" class="tab-content hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+            <h2 style="font-size:34px;font-weight:800;color:#111;">📦 Ingresos & Egresos de Tratamientos</h2>
+            <button class="btn-excel" onclick="exportarIngEgr()">📥 Excel Ingresos & Egresos</button>
+        </div>
+
+        <!-- KPIs Ingresos & Egresos -->
+        <div id="kpi-ing-egr" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:26px;"></div>
+
+        <!-- Filtros -->
+        <div class="card" style="padding:16px 22px;margin-bottom:22px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <input id="buscar-ing-egr" placeholder="🔍 Buscar por paciente, insumo o cita..." class="input-field" style="max-width:340px;padding:9px 14px;" oninput="renderIngEgr()">
+            <select id="filtro-ing-egr-tipo" class="input-field" style="max-width:180px;padding:9px 14px;" onchange="renderIngEgr()">
+                <option value="">Ingresos y Egresos</option>
+                <option value="ingresos">Solo Ingresos</option>
+                <option value="egresos">Solo Egresos</option>
+            </select>
+        </div>
+
+        <!-- Tabla Ingresos -->
+        <div id="panel-ingresos-trat">
+            <div class="card" style="overflow:hidden;margin-bottom:26px;">
+                <div style="padding:18px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:1px solid #f1f5f9;background:linear-gradient(135deg,#f0fdf4,#dcfce7);">
+                    <div style="font-size:17px;font-weight:800;color:#16a34a;">
+                        💰 Ingresos — Medicamentos / Insumos cobrados al paciente
+                        <span id="badge-ing-count" style="background:#16a34a;color:white;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;margin-left:8px;"></span>
+                    </div>
+                    <div style="font-size:20px;font-weight:800;color:#16a34a;" id="total-ing-trat">S/ 0.00</div>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr style="background:#f0fdf4;">
+                                <th style="color:#16a34a;">#</th>
+                                <th style="color:#16a34a;">Cita</th>
+                                <th style="color:#16a34a;">Paciente</th>
+                                <th style="color:#16a34a;">Documento</th>
+                                <th style="color:#16a34a;">Tratamiento</th>
+                                <th style="color:#16a34a;">Insumo / Medicamento</th>
+                                <th style="color:#16a34a;">Cantidad</th>
+                                <th style="color:#16a34a;">Unidad</th>
+                                <th style="color:#16a34a;">Precio Unit.</th>
+                                <th style="color:#16a34a;text-align:right;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-ing-trat"></tbody>
+                    </table>
+                </div>
+                <div id="ing-empty" style="display:none;text-align:center;padding:40px;color:#9ca3af;">
+                    <div style="font-size:36px;margin-bottom:8px;">💰</div>
+                    <div style="font-weight:600;">No hay ingresos registrados</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla Egresos -->
+        <div id="panel-egresos-trat">
+            <div class="card" style="overflow:hidden;">
+                <div style="padding:18px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:1px solid #f1f5f9;background:linear-gradient(135deg,#fef2f2,#fee2e2);">
+                    <div style="font-size:17px;font-weight:800;color:#dc2626;">
+                        📤 Egresos — Costos de la clínica por tratamiento
+                        <span id="badge-egr-count" style="background:#dc2626;color:white;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;margin-left:8px;"></span>
+                    </div>
+                    <div style="font-size:20px;font-weight:800;color:#dc2626;" id="total-egr-trat">S/ 0.00</div>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr style="background:#fef2f2;">
+                                <th style="color:#dc2626;">#</th>
+                                <th style="color:#dc2626;">Cita</th>
+                                <th style="color:#dc2626;">Paciente</th>
+                                <th style="color:#dc2626;">Documento</th>
+                                <th style="color:#dc2626;">Tratamiento</th>
+                                <th style="color:#dc2626;">Concepto / Insumo</th>
+                                <th style="color:#dc2626;">Cantidad</th>
+                                <th style="color:#dc2626;">Unidad</th>
+                                <th style="color:#dc2626;">Precio Unit.</th>
+                                <th style="color:#dc2626;text-align:right;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-egr-trat"></tbody>
+                    </table>
+                </div>
+                <div id="egr-empty" style="display:none;text-align:center;padding:40px;color:#9ca3af;">
+                    <div style="font-size:36px;margin-bottom:8px;">📤</div>
+                    <div style="font-weight:600;">No hay egresos registrados</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FACTURAS -->
+    <div id="facturas" class="tab-content hidden">
+        <h2 style="font-size:34px;font-weight:800;color:#111;margin-bottom:22px;">💰 Facturación</h2>
+        <div style="background:linear-gradient(135deg,#10b981,#059669);color:white;padding:52px;border-radius:24px;text-align:center;">
+            <div style="font-size:44px;margin-bottom:10px;">🚧</div>
+            <h3 style="font-size:22px;font-weight:700;margin-bottom:6px;">Próximamente</h3>
+            <p style="opacity:0.9;">Facturas automáticas y control de cobros</p>
+        </div>
+    </div>
+
+    <!-- REPORTES -->
+    <div id="reportes" class="tab-content hidden">
+        <h2 style="font-size:34px;font-weight:800;color:#111;margin-bottom:22px;">📈 Reportes</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px;">
+            <button onclick="exportarPacientes()" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:white;border:none;border-radius:20px;padding:36px 16px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 6px 20px rgba(37,99,235,0.3);" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+                <div style="font-size:36px;margin-bottom:10px;">👥</div>Excel Pacientes
+            </button>
+            <button onclick="exportarCitas()" style="background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;border-radius:20px;padding:36px 16px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 6px 20px rgba(249,115,22,0.3);" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+                <div style="font-size:36px;margin-bottom:10px;">📅</div>Excel Citas
+            </button>
+            <button onclick="exportarTodo()" style="background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;border-radius:20px;padding:36px 16px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 6px 20px rgba(16,185,129,0.3);" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+                <div style="font-size:36px;margin-bottom:10px;">📊</div>Todo Excel
+            </button>
+            <button onclick="generarPDF()" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;border:none;border-radius:20px;padding:36px 16px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 6px 20px rgba(139,92,246,0.3);" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+                <div style="font-size:36px;margin-bottom:10px;">📄</div>PDF Completo
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL NUEVO/EDITAR PACIENTE ===== -->
+<div id="modal-paciente" class="modal-overlay" style="display:none;" onclick="if(event.target===this)cerrarModalPaciente()">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modal-pac-title">➕ Registrar Nuevo Paciente</div>
+            <button class="modal-close" onclick="cerrarModalPaciente()">✕</button>
+        </div>
+        <form id="form-paciente" onsubmit="guardarPaciente(event)" autocomplete="off">
+            <div class="form-grid">
+                <div><label class="field-label">Nombres <span class="required-star">*</span></label>
+                    <input id="pac-nombre" class="input-field" placeholder="Ej: Juan Carlos" required></div>
+                <div><label class="field-label">Apellidos <span class="required-star">*</span></label>
+                    <input id="pac-apellido" class="input-field" placeholder="Ej: Pérez García" required></div>
+                <div><label class="field-label">N° Documento <span class="required-star">*</span></label>
+                    <input id="pac-doc" class="input-field" placeholder="Ej: 12345678" required></div>
+                <div><label class="field-label">Teléfono</label>
+                    <input id="pac-tel" class="input-field" placeholder="Ej: +51 999 999 999"></div>
+                <div><label class="field-label">Email</label>
+                    <input id="pac-email" type="email" class="input-field" placeholder="correo@ejemplo.com"></div>
+                <div><label class="field-label">Fecha de Nacimiento</label>
+                    <input id="pac-fecha-nac" type="date" class="input-field"></div>
+                <div style="grid-column:1/-1;"><label class="field-label">Observaciones Médicas</label>
+                    <textarea id="pac-observaciones" class="input-field" placeholder="Alergias, enfermedades, medicamentos actuales..." style="height:80px;resize:vertical;"></textarea></div>
+            </div>
+            <div id="pac-error-msg" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:11px 14px;color:#dc2626;font-size:13px;margin-top:14px;"></div>
+            <div style="display:flex;gap:10px;margin-top:24px;">
+                <button type="button" onclick="cerrarModalPaciente()" style="flex:1;background:#f1f5f9;color:#374151;border:none;border-radius:14px;padding:13px;font-weight:700;font-size:14px;cursor:pointer;">Cancelar</button>
+                <button type="submit" id="btn-pac-submit" class="btn-success" style="flex:2;font-size:14px;padding:13px;">💾 Guardar Paciente</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== MODAL NUEVA CITA ===== -->
+<div id="modal-cita" class="modal-overlay" style="display:none;" onclick="if(event.target===this)cerrarModalCita()">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">📅 Registrar Nueva Cita</div>
+            <button class="modal-close" onclick="cerrarModalCita()">✕</button>
+        </div>
+
+        <!-- Buscador de paciente -->
+        <div style="margin-bottom:20px;">
+            <label class="field-label">Buscar Paciente <span class="required-star">*</span></label>
+            <div style="position:relative;">
+                <input id="cita-buscar-pac" class="input-field" placeholder="🔍 Escribe nombre o documento del paciente..." oninput="buscarPacienteCita()" autocomplete="off">
+                <div id="cita-dropdown" class="search-dropdown" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Info del paciente seleccionado -->
+        <div id="cita-pac-info" style="display:none;margin-bottom:20px;">
+            <div class="pac-info-block">
+                <div id="cita-pac-avatar" class="pac-avatar" style="background:#4f46e5;">JC</div>
+                <div style="flex:1;">
+                    <div style="font-weight:800;font-size:16px;color:#111;" id="cita-pac-nombre-show"></div>
+                    <div style="display:flex;gap:16px;margin-top:6px;flex-wrap:wrap;">
+                        <div style="font-size:12px;color:#6b7280;">🆔 <span id="cita-pac-doc-show" style="font-weight:600;color:#374151;"></span></div>
+                        <div style="font-size:12px;color:#6b7280;">🎂 <span id="cita-pac-edad-show" style="font-weight:600;color:#374151;"></span></div>
+                        <div style="font-size:12px;color:#6b7280;">📅 Citas previas: <span id="cita-pac-ncitas-show" style="font-weight:700;color:#4f46e5;"></span></div>
+                    </div>
+                    <div id="cita-pac-obs-show" style="font-size:12px;color:#dc2626;margin-top:4px;font-weight:600;"></div>
+                </div>
+                <button onclick="limpiarPacienteCita()" style="background:#fef2f2;color:#dc2626;border:none;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-weight:600;">✕ Cambiar</button>
+            </div>
+        </div>
+
+        <!-- Campos ocultos del paciente seleccionado -->
+        <input type="hidden" id="cita-pac-id">
+
+        <!-- Formulario de la cita -->
+        <form id="form-cita" onsubmit="guardarCita(event)" autocomplete="off">
+            <div class="form-grid" style="margin-bottom:14px;">
+                <div>
+                    <label class="field-label">Fecha de la Cita <span class="required-star">*</span></label>
+                    <input id="cita-fecha" type="datetime-local" class="input-field" required>
+                </div>
+                <div>
+                    <label class="field-label">Monto a Pagar (S/) <span class="required-star">*</span></label>
+                    <input id="cita-monto" type="number" min="0" step="0.01" class="input-field" placeholder="Ej: 150.00" required>
+                </div>
+                <div style="grid-column:1/-1;">
+                    <label class="field-label">Detalle / Tipo de Cita <span class="required-star">*</span></label>
+                    <select id="cita-detalle" class="input-field" required>
+                        <option value="">-- Selecciona el tipo --</option>
+                        <option>Limpieza dental</option>
+                        <option>Extracción</option>
+                        <option>Empaste / Restauración</option>
+                        <option>Blanqueamiento dental</option>
+                        <option>Ortodoncia - Revisión</option>
+                        <option>Ortodoncia - Ajuste</option>
+                        <option>Endodoncia (Root Canal)</option>
+                        <option>Corona dental</option>
+                        <option>Implante dental</option>
+                        <option>Consulta / Evaluación</option>
+                        <option>Radiografía</option>
+                        <option>Otro</option>
+                    </select>
+                </div>
+                <div style="grid-column:1/-1;">
+                    <label class="field-label">Observaciones de la Cita</label>
+                    <textarea id="cita-obs" class="input-field" placeholder="Indicaciones, notas del doctor, seguimiento..." style="height:80px;resize:vertical;"></textarea>
+                </div>
+                <div>
+                    <label class="field-label">Estado</label>
+                    <select id="cita-estado" class="input-field">
+                        <option value="Pendiente">⏳ Pendiente</option>
+                        <option value="Completada">✅ Completada</option>
+                        <option value="Cancelada">❌ Cancelada</option>
+                    </select>
+                </div>
+            </div>
+            <div id="cita-error-msg" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:11px 14px;color:#dc2626;font-size:13px;margin-bottom:14px;"></div>
+            <div style="display:flex;gap:10px;">
+                <button type="button" onclick="cerrarModalCita()" style="flex:1;background:#f1f5f9;color:#374151;border:none;border-radius:14px;padding:13px;font-weight:700;font-size:14px;cursor:pointer;">Cancelar</button>
+                <button type="submit" id="btn-cita-submit" class="btn-orange" style="flex:2;font-size:14px;padding:13px;">📅 Guardar Cita</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL TRATAMIENTO -->
+<div id="modal-trat" class="modal-overlay" style="display:none;" onclick="if(event.target===this)cerrarModalTrat()">
+    <div class="modal" style="max-width:820px;">
+        <div class="modal-header">
+            <div class="modal-title" id="modal-trat-title">💉 Registrar Tratamiento</div>
+            <button class="modal-close" onclick="cerrarModalTrat()">✕</button>
+        </div>
+
+        <!-- Buscador de cita -->
+        <div style="margin-bottom:18px;">
+            <label class="field-label">Buscar Cita <span class="required-star">*</span></label>
+            <div style="position:relative;">
+                <input id="trat-buscar-cita" class="input-field" placeholder="🔍 Escribe N° de cita, nombre o documento del paciente..." oninput="buscarCitaTrat()" autocomplete="off">
+                <div id="trat-cita-dropdown" class="search-dropdown" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Info cita/paciente seleccionado -->
+        <div id="trat-cita-info" style="display:none;margin-bottom:18px;">
+            <div class="pac-info-block" style="flex-wrap:wrap;gap:12px;">
+                <div id="trat-pac-avatar" class="pac-avatar" style="background:#7c3aed;font-size:14px;">??</div>
+                <div style="flex:1;min-width:200px;">
+                    <div style="font-weight:800;font-size:15px;color:#111;" id="trat-show-nombre"></div>
+                    <div style="display:flex;gap:14px;margin-top:5px;flex-wrap:wrap;">
+                        <div style="font-size:12px;color:#6b7280;">🆔 Doc: <span id="trat-show-doc" style="font-weight:700;color:#374151;"></span></div>
+                        <div style="font-size:12px;color:#6b7280;">🎂 <span id="trat-show-edad" style="font-weight:700;color:#374151;"></span></div>
+                        <div style="font-size:12px;color:#6b7280;">📋 Cita #<span id="trat-show-ncita" style="font-weight:700;color:#7c3aed;"></span></div>
+                        <div style="font-size:12px;color:#6b7280;">📅 <span id="trat-show-fecha" style="font-weight:700;color:#374151;"></span></div>
+                    </div>
+                    <div style="font-size:12px;color:#374151;margin-top:4px;">🦷 <span id="trat-show-detalle" style="font-weight:600;"></span></div>
+                </div>
+                <button onclick="limpiarCitaTrat()" style="background:#fef2f2;color:#dc2626;border:none;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-weight:600;">✕ Cambiar</button>
+            </div>
+        </div>
+
+        <input type="hidden" id="trat-cita-id">
+        <input type="hidden" id="trat-pac-id">
+
+        <!-- Nombre del tratamiento y estado -->
+        <div class="form-grid" style="margin-bottom:18px;">
+            <div>
+                <label class="field-label">Nombre del Tratamiento <span class="required-star">*</span></label>
+                <input id="trat-nombre" class="input-field" placeholder="Ej: Ortodoncia metálica completa" required>
+            </div>
+            <div>
+                <label class="field-label">Estado del Tratamiento</label>
+                <select id="trat-estado" class="input-field">
+                    <option value="En curso">⚙️ En curso</option>
+                    <option value="Completado">✅ Completado</option>
+                    <option value="Cancelado">❌ Cancelado</option>
+                </select>
+            </div>
+            <div style="grid-column:1/-1;">
+                <label class="field-label">Descripción / Notas del Tratamiento</label>
+                <textarea id="trat-desc" class="input-field" placeholder="Detalles del tratamiento, indicaciones, seguimiento..." style="height:60px;resize:vertical;"></textarea>
+            </div>
+        </div>
+
+        <!-- Tabla de INGRESOS (medicamentos/insumos que el paciente paga) -->
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:16px;padding:18px;margin-bottom:18px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                <div style="font-size:14px;font-weight:800;color:#16a34a;">💰 Ingresos — Insumos / Medicamentos cobrados al paciente</div>
+                <button type="button" onclick="agregarFilaIngreso()" style="background:#16a34a;color:white;border:none;border-radius:10px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;">+ Agregar</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table style="min-width:580px;">
+                    <thead>
+                        <tr style="background:#dcfce7;">
+                            <th style="color:#16a34a;">Nombre del Insumo</th>
+                            <th style="color:#16a34a;width:90px;">Cantidad</th>
+                            <th style="color:#16a34a;width:110px;">Unidad</th>
+                            <th style="color:#16a34a;width:110px;">Precio (S/)</th>
+                            <th style="color:#16a34a;width:110px;">Subtotal</th>
+                            <th style="width:42px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="trat-ingresos-tbody"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" style="text-align:right;font-weight:800;font-size:13px;padding:10px 14px;color:#16a34a;">TOTAL INGRESOS:</td>
+                            <td style="font-weight:800;color:#16a34a;font-size:14px;" id="trat-total-ing">S/ 0.00</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tabla de EGRESOS -->
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:16px;padding:18px;margin-bottom:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                <div style="font-size:14px;font-weight:800;color:#dc2626;">📤 Egresos — Costos del tratamiento para la clínica</div>
+                <button type="button" onclick="agregarFilaEgreso()" style="background:#dc2626;color:white;border:none;border-radius:10px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;">+ Agregar</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table style="min-width:580px;">
+                    <thead>
+                        <tr style="background:#fee2e2;">
+                            <th style="color:#dc2626;">Nombre del Egreso</th>
+                            <th style="color:#dc2626;width:90px;">Cantidad</th>
+                            <th style="color:#dc2626;width:110px;">Unidad</th>
+                            <th style="color:#dc2626;width:110px;">Precio (S/)</th>
+                            <th style="color:#dc2626;width:110px;">Subtotal</th>
+                            <th style="width:42px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="trat-egresos-tbody"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" style="text-align:right;font-weight:800;font-size:13px;padding:10px 14px;color:#dc2626;">TOTAL EGRESOS:</td>
+                            <td style="font-weight:800;color:#dc2626;font-size:14px;" id="trat-total-egr">S/ 0.00</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div id="trat-error-msg" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:11px 14px;color:#dc2626;font-size:13px;margin-bottom:14px;"></div>
+        <div style="display:flex;gap:10px;">
+            <button type="button" onclick="cerrarModalTrat()" style="flex:1;background:#f1f5f9;color:#374151;border:none;border-radius:14px;padding:13px;font-weight:700;font-size:14px;cursor:pointer;">Cancelar</button>
+            <button type="button" id="btn-trat-submit" class="btn-primary" style="flex:2;font-size:14px;padding:13px;" onclick="guardarTratamiento()">💉 Guardar Tratamiento</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DETALLE TRATAMIENTO -->
+<div id="modal-trat-detalle" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal" style="max-width:820px;">
+        <div class="modal-header">
+            <div class="modal-title" id="trat-detalle-titulo">💉 Detalle del Tratamiento</div>
+            <button class="modal-close" onclick="document.getElementById('modal-trat-detalle').style.display='none'">✕</button>
+        </div>
+        <div id="trat-detalle-contenido"></div>
+    </div>
+</div>
+<div id="modal-detalle" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="detalle-titulo">👤 Detalle</div>
+            <button class="modal-close" onclick="document.getElementById('modal-detalle').style.display='none'">✕</button>
+        </div>
+        <div id="detalle-contenido"></div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+//  BASE DE DATOS
+// ============================================================
+let clinicData = {
+    pacientes: [
+        {id:1,nombre:'Juan Carlos',apellido:'Pérez García',doc:'12345678',tel:'+54 11 5555-1234',email:'juan.perez@clinicadental.com',fechaNac:'1985-03-15',observaciones:'Alergia a penicilina',citas:0,totalGastado:0},
+        {id:2,nombre:'María',apellido:'Gómez López',doc:'87654321',tel:'+54 11 5555-5678',email:'maria.gomez@clinicadental.com',fechaNac:'1992-07-22',observaciones:'Sin alergias',citas:0,totalGastado:0},
+        {id:3,nombre:'Carlos',apellido:'Rodríguez',doc:'11223344',tel:'+54 11 5555-9999',email:'carlos.rodriguez@clinicadental.com',fechaNac:'1978-11-10',observaciones:'Hipertensión',citas:0,totalGastado:0},
+        {id:4,nombre:'Ana',apellido:'Martínez',doc:'44332211',tel:'+54 11 5555-4444',email:'ana.martinez@clinicadental.com',fechaNac:'1995-02-28',observaciones:'Ninguna',citas:0,totalGastado:0}
+    ],
+    citas: [],
+    tratamientos: []
+};
+
+// Recalcula citas y totalGastado de cada paciente a partir del arreglo de citas
+function recalcularContadores() {
+    clinicData.pacientes.forEach(p => {
+        const misCitas = clinicData.citas.filter(c => c.pacienteId === p.id);
+        p.citas = misCitas.length;
+        p.totalGastado = misCitas.reduce((s,c) => s + parseFloat(c.monto||0), 0);
+    });
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+window.onload = function() {
+    setTimeout(() => { document.getElementById('loading').style.display='none'; }, 1600);
+    initNavigation();
+    actualizarDashboard();
+    actualizarTablaPacientes();
+    initChart();
+    // Fecha mínima para citas = hoy
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('cita-fecha').min = now.toISOString().slice(0,16);
+    renderKpiTratamientos();
+};
+
+// ============================================================
+//  NAVEGACIÓN
+// ============================================================
+function initNavigation() {
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', function() { showTab(this.dataset.tab); });
+    });
+}
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    const el = document.getElementById(tabId);
+    if(el){ el.classList.remove('hidden'); el.classList.add('fade-up'); }
+    const btn = document.querySelector(`[data-tab="${tabId}"]`);
+    if(btn) btn.classList.add('active');
+    if(tabId==='dashboard') actualizarDashboard();
+    if(tabId==='pacientes') actualizarTablaPacientes();
+    if(tabId==='citas') { renderKpiCitas(); renderCitas(); }
+    if(tabId==='tratamientos') { renderKpiTratamientos(); renderTratamientos(); }
+    if(tabId==='ing-egr') { renderKpiIngEgr(); renderIngEgr(); }
+}
+
+// ============================================================
+//  DASHBOARD
+// ============================================================
+function actualizarDashboard() {
+    recalcularContadores();
+    const totalPac = clinicData.pacientes.length;
+    const totalIngresos = clinicData.pacientes.reduce((s,p)=>s+p.totalGastado,0);
+    const totalCitas = clinicData.citas.length;
+    const promedio = totalPac ? Math.round(totalIngresos/totalPac) : 0;
+
+    document.getElementById('kpis').innerHTML = `
+        <div class="kpi" style="background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 6px 20px rgba(16,185,129,0.3);">
+            <div style="font-size:26px;margin-bottom:6px;">👥</div>
+            <div style="font-size:32px;font-weight:800;">${totalPac}</div>
+            <div style="opacity:0.85;font-size:13px;margin-top:3px;">Pacientes Totales</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);box-shadow:0 6px 20px rgba(37,99,235,0.3);">
+            <div style="font-size:26px;margin-bottom:6px;">💰</div>
+            <div style="font-size:32px;font-weight:800;">S/ ${totalIngresos.toLocaleString()}</div>
+            <div style="opacity:0.85;font-size:13px;margin-top:3px;">Ingresos Totales</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,#f97316,#ea580c);box-shadow:0 6px 20px rgba(249,115,22,0.3);">
+            <div style="font-size:26px;margin-bottom:6px;">📅</div>
+            <div style="font-size:32px;font-weight:800;">${totalCitas}</div>
+            <div style="opacity:0.85;font-size:13px;margin-top:3px;">Citas Registradas</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);box-shadow:0 6px 20px rgba(124,58,237,0.3);">
+            <div style="font-size:26px;margin-bottom:6px;">📊</div>
+            <div style="font-size:32px;font-weight:800;">S/ ${promedio}</div>
+            <div style="opacity:0.85;font-size:13px;margin-top:3px;">Promedio / Paciente</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,#ec4899,#db2777);box-shadow:0 6px 20px rgba(236,72,153,0.3);">
+            <div style="font-size:26px;margin-bottom:6px;">💉</div>
+            <div style="font-size:32px;font-weight:800;">${clinicData.tratamientos.length}</div>
+            <div style="opacity:0.85;font-size:13px;margin-top:3px;">Tratamientos</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,#0891b2,#0e7490);box-shadow:0 6px 20px rgba(8,145,178,0.3);">
+            <div style="font-size:26px;margin-bottom:6px;">📤</div>
+            <div style="font-size:32px;font-weight:800;">S/ ${clinicData.tratamientos.reduce((s,t)=>s+t.totalEgresos,0).toLocaleString()}</div>
+            <div style="opacity:0.85;font-size:13px;margin-top:3px;">Egresos Totales</div>
+        </div>
+    `;
+
+    // Últimas citas en dashboard
+    const uc = document.getElementById('ultimas-citas-dash');
+    if(uc) {
+        const ultimas = [...clinicData.citas].reverse().slice(0,5);
+        if(!ultimas.length) {
+            uc.innerHTML = '<div style="text-align:center;padding:32px;color:#9ca3af;"><div style="font-size:36px;margin-bottom:8px;">📅</div><div>No hay citas aún</div></div>';
+        } else {
+            uc.innerHTML = ultimas.map(c => {
+                const p = clinicData.pacientes.find(x=>x.id===c.pacienteId);
+                const nombre = p ? `${p.nombre} ${p.apellido}` : 'Paciente';
+                const fc = new Date(c.fecha);
+                const estadoClass = c.estado==='Completada'?'badge-green':c.estado==='Cancelada'?'status-cancel':'badge-orange';
+                return `
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;">
+                    <div style="width:36px;height:36px;background:#f97316;border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700;flex-shrink:0;">${(p?p.nombre.charAt(0):'?')}${(p?p.apellido.charAt(0):'')}</div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:700;font-size:13px;color:#111;">${nombre}</div>
+                        <div style="font-size:11px;color:#9ca3af;">${c.detalle} · ${fc.toLocaleDateString('es-PE')}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-weight:700;font-size:13px;color:#059669;">S/ ${parseFloat(c.monto).toLocaleString()}</div>
+                        <span class="badge ${estadoClass}" style="font-size:10px;padding:2px 7px;">${c.estado}</span>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    }
+}
+
+// ============================================================
+//  MODAL PACIENTE
+// ============================================================
+let editandoPacId = null;
+function abrirModalPaciente() {
+    editandoPacId = null;
+    document.getElementById('form-paciente').reset();
+    document.getElementById('pac-error-msg').style.display='none';
+    document.getElementById('modal-pac-title').textContent = '➕ Registrar Nuevo Paciente';
+    document.getElementById('btn-pac-submit').textContent = '💾 Guardar Paciente';
+    document.getElementById('btn-pac-submit').className = 'btn-success';
+    document.getElementById('modal-paciente').style.display='flex';
+    setTimeout(()=>document.getElementById('pac-nombre').focus(),100);
+}
+function cerrarModalPaciente() { document.getElementById('modal-paciente').style.display='none'; }
+
+function guardarPaciente(e) {
+    e.preventDefault();
+    const nombre = document.getElementById('pac-nombre').value.trim();
+    const apellido = document.getElementById('pac-apellido').value.trim();
+    const doc = document.getElementById('pac-doc').value.trim();
+    const tel = document.getElementById('pac-tel').value.trim();
+    const email = document.getElementById('pac-email').value.trim();
+    const fechaNac = document.getElementById('pac-fecha-nac').value;
+    const observaciones = document.getElementById('pac-observaciones').value.trim() || 'Sin observaciones';
+
+    // Validar doc duplicado (excluyendo el que se edita)
+    const dup = clinicData.pacientes.find(p => p.doc===doc && p.id!==editandoPacId);
+    if(dup) { mostrarErrPac('Ya existe un paciente con ese número de documento.'); return; }
+
+    if(editandoPacId) {
+        const p = clinicData.pacientes.find(x=>x.id===editandoPacId);
+        if(p){ Object.assign(p, {nombre,apellido,doc,tel,email,fechaNac,observaciones}); }
+        mostrarNotificacion('✏️ Paciente actualizado');
+    } else {
+        clinicData.pacientes.push({id:Date.now(),nombre,apellido,doc,tel,email,fechaNac,observaciones,citas:0,totalGastado:0});
+        mostrarNotificacion('✅ Paciente registrado');
+    }
+    cerrarModalPaciente();
+    actualizarTablaPacientes();
+    actualizarDashboard();
+}
+function mostrarErrPac(msg){ const e=document.getElementById('pac-error-msg'); e.textContent=msg; e.style.display='block'; }
+
+// ============================================================
+//  TABLA PACIENTES
+// ============================================================
+function actualizarTablaPacientes() {
+    recalcularContadores();
+    const buscar = (document.getElementById('buscar-pacientes')?.value||'').toLowerCase();
+    const filtrados = clinicData.pacientes.filter(p =>
+        `${p.nombre} ${p.apellido}`.toLowerCase().includes(buscar) ||
+        p.doc.includes(buscar) || (p.email||'').toLowerCase().includes(buscar)
+    );
+    const badge = document.getElementById('total-pac-badge');
+    if(badge) badge.textContent = `${filtrados.length} paciente${filtrados.length!==1?'s':''}`;
+    const tbody = document.getElementById('tbody-pacientes');
+    const empty = document.getElementById('pac-empty');
+    if(!filtrados.length){ tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if(empty) empty.style.display='none';
+    const colores = ['#4f46e5','#10b981','#f97316','#ec4899','#06b6d4','#8b5cf6','#dc2626','#0891b2'];
+    tbody.innerHTML = filtrados.map((p,i)=>{
+        const edad = p.fechaNac ? calcularEdad(p.fechaNac) : '—';
+        const av = `${p.nombre.charAt(0)}${p.apellido.charAt(0)}`.toUpperCase();
+        const col = colores[p.id % colores.length];
+        return `<tr>
+            <td style="color:#9ca3af;font-weight:600;">${i+1}</td>
+            <td>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:34px;height:34px;background:${col};border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700;flex-shrink:0;">${av}</div>
+                    <div>
+                        <div style="font-weight:700;color:#111;">${p.nombre} ${p.apellido}</div>
+                        <div style="font-size:11px;color:#9ca3af;">${p.observaciones.length>38?p.observaciones.slice(0,38)+'...':p.observaciones}</div>
+                    </div>
+                </div>
+            </td>
+            <td><span style="background:#f1f5f9;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:600;">${p.doc}</span></td>
+            <td>${p.tel||'—'}</td>
+            <td style="font-size:12px;">${p.email||'—'}</td>
+            <td style="color:#6b7280;">${edad}</td>
+            <td>
+                <span class="badge badge-blue" style="cursor:pointer;" onclick="verCitasPaciente(${p.id})" title="Ver citas de este paciente">
+                    ${p.citas} ${p.citas===1?'cita':'citas'}
+                </span>
+            </td>
+            <td style="font-weight:700;color:#059669;">S/ ${p.totalGastado.toLocaleString()}</td>
+            <td style="text-align:right;">
+                <div style="display:flex;justify-content:flex-end;gap:5px;">
+                    <button class="btn-sm btn-view" onclick="verDetallePaciente(${p.id})" title="Ver detalle">👁️</button>
+                    <button class="btn-sm" style="background:#f3e8ff;color:#7c3aed;" onclick="agendarDesde(${p.id})" title="Agendar cita">📅</button>
+                    <button class="btn-sm btn-edit" onclick="editarPaciente(${p.id})" title="Editar">✏️</button>
+                    <button class="btn-sm btn-delete" onclick="eliminarPaciente(${p.id})" title="Eliminar">🗑️</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function calcularEdad(fechaNac) {
+    const hoy = new Date(), nac = new Date(fechaNac);
+    let edad = hoy.getFullYear() - nac.getFullYear();
+    if(hoy.getMonth()-nac.getMonth()<0||(hoy.getMonth()-nac.getMonth()===0&&hoy.getDate()<nac.getDate())) edad--;
+    return `${edad} años`;
+}
+
+function verDetallePaciente(id) {
+    const p = clinicData.pacientes.find(x=>x.id===id); if(!p) return;
+    const misCitas = clinicData.citas.filter(c=>c.pacienteId===id);
+    document.getElementById('detalle-titulo').textContent = `👤 ${p.nombre} ${p.apellido}`;
+    document.getElementById('detalle-contenido').innerHTML = `
+        <div class="form-grid" style="margin-bottom:16px;">
+            ${dc('🆔 Documento',p.doc)} ${dc('📱 Teléfono',p.tel||'No registrado')}
+            ${dc('📧 Email',p.email||'No registrado')} ${dc('🎂 Fecha Nac.',p.fechaNac?new Date(p.fechaNac+'T12:00:00').toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'}):'No registrado')}
+            ${dc('📅 Total Citas',p.citas)} ${dc('💰 Total Gastado','S/ '+p.totalGastado.toLocaleString())}
+            <div style="grid-column:1/-1;">${dc('📝 Observaciones',p.observaciones)}</div>
+        </div>
+        ${misCitas.length?`<div style="margin-top:4px;"><div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:10px;">Historial de Citas (${misCitas.length})</div>
+        ${misCitas.map(c=>`<div style="background:#f8fafc;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+            <div><div style="font-weight:600;font-size:13px;">${c.detalle}</div><div style="font-size:11px;color:#9ca3af;">${new Date(c.fecha).toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div></div>
+            <div style="text-align:right;"><div style="font-weight:700;color:#059669;">S/ ${parseFloat(c.monto).toLocaleString()}</div><span class="badge ${c.estado==='Completada'?'badge-green':c.estado==='Cancelada'?'status-cancel':'badge-orange'}" style="font-size:10px;">${c.estado}</span></div>
+        </div>`).join('')}</div>`:'<div style="text-align:center;padding:20px;color:#9ca3af;font-size:13px;">Sin citas registradas aún</div>'}
+    `;
+    document.getElementById('modal-detalle').style.display='flex';
+}
+function dc(label,val){ return `<div style="background:#f8fafc;border-radius:12px;padding:12px;"><div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:3px;">${label}</div><div style="font-size:13px;font-weight:600;color:#111;">${val}</div></div>`; }
+
+function editarPaciente(id) {
+    const p = clinicData.pacientes.find(x=>x.id===id); if(!p) return;
+    editandoPacId = id;
+    document.getElementById('pac-nombre').value=p.nombre;
+    document.getElementById('pac-apellido').value=p.apellido;
+    document.getElementById('pac-doc').value=p.doc;
+    document.getElementById('pac-tel').value=p.tel;
+    document.getElementById('pac-email').value=p.email;
+    document.getElementById('pac-fecha-nac').value=p.fechaNac;
+    document.getElementById('pac-observaciones').value=p.observaciones==='Sin observaciones'?'':p.observaciones;
+    document.getElementById('pac-error-msg').style.display='none';
+    document.getElementById('modal-pac-title').textContent='✏️ Editar Paciente';
+    document.getElementById('btn-pac-submit').textContent='💾 Actualizar Paciente';
+    document.getElementById('btn-pac-submit').style.background='linear-gradient(135deg,#f97316,#ea580c)';
+    document.getElementById('modal-paciente').style.display='flex';
+}
+function eliminarPaciente(id) {
+    const p=clinicData.pacientes.find(x=>x.id===id); if(!p) return;
+    if(!confirm(`¿Eliminar a ${p.nombre} ${p.apellido}?\nTambién se eliminarán sus citas.`)) return;
+    clinicData.pacientes=clinicData.pacientes.filter(x=>x.id!==id);
+    clinicData.citas=clinicData.citas.filter(c=>c.pacienteId!==id);
+    actualizarTablaPacientes(); actualizarDashboard();
+    mostrarNotificacion('🗑️ Paciente eliminado');
+}
+
+// ============================================================
+//  MODAL CITA - BUSCADOR DE PACIENTE
+// ============================================================
+let pacienteSeleccionado = null;
+
+function abrirModalCita(pacId) {
+    pacienteSeleccionado = null;
+    document.getElementById('form-cita').reset();
+    document.getElementById('cita-buscar-pac').value = '';
+    document.getElementById('cita-pac-id').value = '';
+    document.getElementById('cita-pac-info').style.display='none';
+    document.getElementById('cita-buscar-pac').style.display='block';
+    document.getElementById('cita-dropdown').style.display='none';
+    document.getElementById('cita-error-msg').style.display='none';
+    document.getElementById('modal-cita').style.display='flex';
+
+    if(pacId) {
+        const p = clinicData.pacientes.find(x=>x.id===pacId);
+        if(p) { setTimeout(()=>seleccionarPacienteCita(p), 50); }
+    } else {
+        setTimeout(()=>document.getElementById('cita-buscar-pac').focus(),100);
+    }
+}
+function cerrarModalCita() { document.getElementById('modal-cita').style.display='none'; }
+
+// Botón "agendar cita" desde tabla pacientes
+function agendarDesde(pacId) {
+    showTab('citas');
+    setTimeout(()=>abrirModalCita(pacId), 200);
+}
+
+function buscarPacienteCita() {
+    const q = document.getElementById('cita-buscar-pac').value.toLowerCase().trim();
+    const dd = document.getElementById('cita-dropdown');
+    if(!q){ dd.style.display='none'; return; }
+    const res = clinicData.pacientes.filter(p =>
+        `${p.nombre} ${p.apellido}`.toLowerCase().includes(q) || p.doc.includes(q)
+    ).slice(0,6);
+    if(!res.length){ dd.innerHTML='<div class="search-item" style="color:#9ca3af;cursor:default;">No se encontraron pacientes</div>'; dd.style.display='block'; return; }
+    const colores=['#4f46e5','#10b981','#f97316','#ec4899','#06b6d4','#8b5cf6'];
+    dd.innerHTML = res.map(p => {
+        const col = colores[p.id%colores.length];
+        const av = `${p.nombre.charAt(0)}${p.apellido.charAt(0)}`.toUpperCase();
+        const edad = p.fechaNac ? calcularEdad(p.fechaNac) : '';
+        return `<div class="search-item" onclick="seleccionarPacienteCita(${JSON.stringify(p).replace(/"/g,'&quot;')})">
+            <div style="width:32px;height:32px;background:${col};border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700;flex-shrink:0;">${av}</div>
+            <div>
+                <div style="font-weight:700;">${p.nombre} ${p.apellido}</div>
+                <div style="font-size:11px;color:#9ca3af;">Doc: ${p.doc}${edad?' · '+edad:''}</div>
+            </div>
+        </div>`;
+    }).join('');
+    dd.style.display='block';
+}
+
+function seleccionarPacienteCita(p) {
+    // p puede llegar como objeto directo o necesita búsqueda si es id
+    if(typeof p === 'number') p = clinicData.pacientes.find(x=>x.id===p);
+    if(!p) return;
+    pacienteSeleccionado = p;
+    document.getElementById('cita-pac-id').value = p.id;
+    document.getElementById('cita-dropdown').style.display='none';
+    document.getElementById('cita-buscar-pac').style.display='none';
+
+    const colores=['#4f46e5','#10b981','#f97316','#ec4899','#06b6d4','#8b5cf6'];
+    const col = colores[p.id%colores.length];
+    const av = `${p.nombre.charAt(0)}${p.apellido.charAt(0)}`.toUpperCase();
+    const edad = p.fechaNac ? calcularEdad(p.fechaNac) : 'Sin fecha';
+    const obs = p.observaciones && p.observaciones!=='Sin observaciones'?`⚠️ ${p.observaciones}`:'';
+
+    document.getElementById('cita-pac-avatar').style.background = col;
+    document.getElementById('cita-pac-avatar').textContent = av;
+    document.getElementById('cita-pac-nombre-show').textContent = `${p.nombre} ${p.apellido}`;
+    document.getElementById('cita-pac-doc-show').textContent = p.doc;
+    document.getElementById('cita-pac-edad-show').textContent = edad;
+    document.getElementById('cita-pac-ncitas-show').textContent = p.citas;
+    document.getElementById('cita-pac-obs-show').textContent = obs;
+    document.getElementById('cita-pac-info').style.display='block';
+}
+
+function limpiarPacienteCita() {
+    pacienteSeleccionado = null;
+    document.getElementById('cita-pac-id').value='';
+    document.getElementById('cita-pac-info').style.display='none';
+    document.getElementById('cita-buscar-pac').style.display='block';
+    document.getElementById('cita-buscar-pac').value='';
+    document.getElementById('cita-buscar-pac').focus();
+}
+
+// Cerrar dropdown al hacer clic fuera
+document.addEventListener('click', e => {
+    const dd = document.getElementById('cita-dropdown');
+    const inp = document.getElementById('cita-buscar-pac');
+    if(dd && !dd.contains(e.target) && e.target!==inp) dd.style.display='none';
+});
+
+// ============================================================
+//  GUARDAR CITA
+// ============================================================
+let editandoCitaId = null;
+
+function guardarCita(e) {
+    e.preventDefault();
+    const pacId = parseInt(document.getElementById('cita-pac-id').value);
+    if(!pacId || !pacienteSeleccionado) {
+        mostrarErrCita('Debes seleccionar un paciente antes de guardar la cita.'); return;
+    }
+    const fecha = document.getElementById('cita-fecha').value;
+    const monto = parseFloat(document.getElementById('cita-monto').value);
+    const detalle = document.getElementById('cita-detalle').value;
+    const obs = document.getElementById('cita-obs').value.trim();
+    const estado = document.getElementById('cita-estado').value;
+
+    if(!fecha||!monto||!detalle){ mostrarErrCita('Completa todos los campos obligatorios.'); return; }
+
+    if(editandoCitaId) {
+        const cita = clinicData.citas.find(c=>c.id===editandoCitaId);
+        if(cita){ Object.assign(cita,{fecha,monto,detalle,obs,estado}); }
+        mostrarNotificacion('✏️ Cita actualizada');
+        editandoCitaId = null;
+    } else {
+        clinicData.citas.push({ id:Date.now(), pacienteId:pacId, fecha, monto, detalle, obs, estado });
+        mostrarNotificacion('✅ Cita registrada exitosamente');
+    }
+
+    // Actualizar contadores del paciente
+    recalcularContadores();
+    cerrarModalCita();
+    renderKpiCitas();
+    renderCitas();
+    actualizarTablaPacientes();
+    actualizarDashboard();
+}
+function mostrarErrCita(msg){ const e=document.getElementById('cita-error-msg'); e.textContent=msg; e.style.display='block'; }
+
+// ============================================================
+//  RENDER CITAS
+// ============================================================
+function renderKpiCitas() {
+    const total = clinicData.citas.length;
+    const pendientes = clinicData.citas.filter(c=>c.estado==='Pendiente').length;
+    const completadas = clinicData.citas.filter(c=>c.estado==='Completada').length;
+    const ingresos = clinicData.citas.filter(c=>c.estado==='Completada').reduce((s,c)=>s+parseFloat(c.monto),0);
+    const el = document.getElementById('kpi-citas');
+    if(el) el.innerHTML = `
+        <div style="background:#eff6ff;border-radius:12px;padding:10px 16px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#1d4ed8;">${total}</div>
+            <div style="font-size:11px;color:#6b7280;">Total citas</div>
+        </div>
+        <div style="background:#ffedd5;border-radius:12px;padding:10px 16px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#ea580c;">${pendientes}</div>
+            <div style="font-size:11px;color:#6b7280;">Pendientes</div>
+        </div>
+        <div style="background:#dcfce7;border-radius:12px;padding:10px 16px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#16a34a;">${completadas}</div>
+            <div style="font-size:11px;color:#6b7280;">Completadas</div>
+        </div>
+        <div style="background:#f3e8ff;border-radius:12px;padding:10px 16px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#7c3aed;">S/ ${ingresos.toLocaleString()}</div>
+            <div style="font-size:11px;color:#6b7280;">Ingresos</div>
+        </div>
+    `;
+}
+
+function renderCitas() {
+    const buscar = (document.getElementById('buscar-citas')?.value||'').toLowerCase();
+    const filtroEst = document.getElementById('filtro-estado')?.value||'';
+    const colores = ['#4f46e5','#10b981','#f97316','#ec4899','#06b6d4','#8b5cf6'];
+
+    let lista = clinicData.citas.filter(c => {
+        const p = clinicData.pacientes.find(x=>x.id===c.pacienteId);
+        const nombre = p?`${p.nombre} ${p.apellido}`:'';
+        const doc = p?p.doc:'';
+        const matchBuscar = nombre.toLowerCase().includes(buscar)||doc.includes(buscar)||c.detalle.toLowerCase().includes(buscar);
+        const matchEst = !filtroEst || c.estado===filtroEst;
+        return matchBuscar && matchEst;
+    });
+
+    const tbody = document.getElementById('tbody-citas');
+    const empty = document.getElementById('citas-empty');
+
+    if(!lista.length){ tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if(empty) empty.style.display='none';
+
+    tbody.innerHTML = [...lista].reverse().map((c,i) => {
+        const p = clinicData.pacientes.find(x=>x.id===c.pacienteId);
+        const nombre = p?`${p.nombre} ${p.apellido}`:'Paciente eliminado';
+        const doc = p?p.doc:'—';
+        const edad = p&&p.fechaNac?calcularEdad(p.fechaNac):'—';
+        const col = p?colores[p.id%colores.length]:'#9ca3af';
+        const av = p?`${p.nombre.charAt(0)}${p.apellido.charAt(0)}`.toUpperCase():'?';
+        const fc = new Date(c.fecha);
+        const fechaStr = fc.toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'});
+        const horaStr = fc.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});
+        const estadoCls = c.estado==='Completada'?'badge-green':c.estado==='Cancelada'?'status-cancel':'badge-orange';
+        const obsStr = c.obs ? (c.obs.length>40?c.obs.slice(0,40)+'...':c.obs) : '—';
+        return `<tr>
+            <td style="color:#9ca3af;font-weight:600;">${lista.length-i}</td>
+            <td>
+                <div style="display:flex;align-items:center;gap:9px;">
+                    <div style="width:32px;height:32px;background:${col};border-radius:9px;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:700;flex-shrink:0;">${av}</div>
+                    <div style="font-weight:700;color:#111;font-size:13px;">${nombre}</div>
+                </div>
+            </td>
+            <td><span style="background:#f1f5f9;padding:2px 8px;border-radius:7px;font-size:12px;font-weight:600;">${doc}</span></td>
+            <td style="color:#6b7280;font-size:12px;">${edad}</td>
+            <td>
+                <div style="font-weight:600;font-size:13px;">${fechaStr}</div>
+                <div style="font-size:11px;color:#9ca3af;">${horaStr}</div>
+            </td>
+            <td style="font-size:13px;color:#374151;">${c.detalle}</td>
+            <td style="font-weight:700;color:#059669;">S/ ${parseFloat(c.monto).toLocaleString()}</td>
+            <td><span class="badge ${estadoCls}" style="font-size:11px;">${c.estado}</span></td>
+            <td style="font-size:12px;color:#6b7280;max-width:160px;">${obsStr}</td>
+            <td style="text-align:right;">
+                <div style="display:flex;justify-content:flex-end;gap:5px;">
+                    <button class="btn-sm btn-edit" onclick="editarCita(${c.id})" title="Editar cita">✏️</button>
+                    <button class="btn-sm btn-delete" onclick="eliminarCita(${c.id})" title="Eliminar cita">🗑️</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function editarCita(id) {
+    const c = clinicData.citas.find(x=>x.id===id); if(!c) return;
+    const p = clinicData.pacientes.find(x=>x.id===c.pacienteId);
+    editandoCitaId = id;
+    abrirModalCita();
+    if(p) setTimeout(()=>seleccionarPacienteCita(p),60);
+    setTimeout(()=>{
+        document.getElementById('cita-fecha').value = c.fecha;
+        document.getElementById('cita-monto').value = c.monto;
+        document.getElementById('cita-detalle').value = c.detalle;
+        document.getElementById('cita-obs').value = c.obs||'';
+        document.getElementById('cita-estado').value = c.estado;
+        document.getElementById('btn-cita-submit').textContent = '💾 Actualizar Cita';
+    },100);
+}
+
+function eliminarCita(id) {
+    const c = clinicData.citas.find(x=>x.id===id); if(!c) return;
+    const p = clinicData.pacientes.find(x=>x.id===c.pacienteId);
+    if(!confirm(`¿Eliminar esta cita de ${p?p.nombre+' '+p.apellido:'este paciente'}?`)) return;
+    clinicData.citas = clinicData.citas.filter(x=>x.id!==id);
+    recalcularContadores();
+    renderKpiCitas(); renderCitas();
+    actualizarTablaPacientes(); actualizarDashboard();
+    mostrarNotificacion('🗑️ Cita eliminada');
+}
+
+function verCitasPaciente(pacId) {
+    showTab('citas');
+    setTimeout(()=>{
+        const p = clinicData.pacientes.find(x=>x.id===pacId);
+        if(p){
+            document.getElementById('buscar-citas').value = `${p.nombre} ${p.apellido}`;
+            renderCitas();
+        }
+    }, 150);
+}
+
+// ============================================================
+//  EXPORTAR
+// ============================================================
+function exportarPacientes() {
+    recalcularContadores();
+    const datos = clinicData.pacientes.map(p=>({
+        'Nombre':p.nombre,'Apellido':p.apellido,'Documento':p.doc,
+        'Teléfono':p.tel,'Email':p.email,'Fecha Nac.':p.fechaNac,
+        'Observaciones':p.observaciones,'N° Citas':p.citas,'Total Gastado':p.totalGastado
+    }));
+    const ws = XLSX.utils.json_to_sheet(datos);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,"Pacientes");
+    XLSX.writeFile(wb,`DentalPro_Pacientes_${new Date().toISOString().slice(0,10)}.xlsx`);
+    mostrarNotificacion('📊 Excel de Pacientes descargado');
+}
+
+function exportarCitas() {
+    const datos = clinicData.citas.map(c=>{
+        const p = clinicData.pacientes.find(x=>x.id===c.pacienteId);
+        return {
+            'Paciente': p?`${p.nombre} ${p.apellido}`:'Eliminado',
+            'Documento': p?p.doc:'—',
+            'Fecha Cita': new Date(c.fecha).toLocaleString('es-PE'),
+            'Detalle': c.detalle,'Monto':c.monto,'Estado':c.estado,'Observaciones':c.obs||''
+        };
+    });
+    const ws = XLSX.utils.json_to_sheet(datos);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,"Citas");
+    XLSX.writeFile(wb,`DentalPro_Citas_${new Date().toISOString().slice(0,10)}.xlsx`);
+    mostrarNotificacion('📊 Excel de Citas descargado');
+}
+
+function exportarTodo() {
+    recalcularContadores();
+    const wb = XLSX.utils.book_new();
+    const datPac = clinicData.pacientes.map(p=>({
+        'Nombre':p.nombre,'Apellido':p.apellido,'Documento':p.doc,
+        'Teléfono':p.tel,'Email':p.email,'N° Citas':p.citas,'Total':p.totalGastado
+    }));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(datPac),"Pacientes");
+    const datCitas = clinicData.citas.map(c=>{
+        const p=clinicData.pacientes.find(x=>x.id===c.pacienteId);
+        return {'Paciente':p?`${p.nombre} ${p.apellido}`:'—','Doc':p?p.doc:'—','Fecha':new Date(c.fecha).toLocaleString('es-PE'),'Detalle':c.detalle,'Monto':c.monto,'Estado':c.estado};
+    });
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(datCitas.length?datCitas:[{info:'Sin citas'}]),"Citas");
+    const datTrat = clinicData.tratamientos.map(t=>{
+        const p=clinicData.pacientes.find(x=>x.id===t.pacienteId);
+        return {'Tratamiento':t.nombre,'Paciente':p?`${p.nombre} ${p.apellido}`:'—','Doc':p?p.doc:'—','Cita #':getCitaNum(t.citaId),'Estado':t.estado,'Ingresos':t.totalIngresos,'Egresos':t.totalEgresos,'Utilidad':t.utilidad};
+    });
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(datTrat.length?datTrat:[{info:'Sin tratamientos'}]),"Tratamientos");
+    XLSX.writeFile(wb,`DentalPro_Completo_${new Date().toISOString().slice(0,10)}.xlsx`);
+    mostrarNotificacion('🎉 Archivo completo descargado');
+}
+
+function generarPDF() {
+    const {jsPDF} = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(18); doc.text('DENTALPRO - Reporte Completo', 20, 28);
+    doc.setFontSize(10); doc.text(`Generado: ${new Date().toLocaleDateString('es-PE')}`, 20, 38);
+    doc.line(20,43,190,43);
+    doc.setFontSize(13); doc.text('PACIENTES', 20, 52);
+    let y=60;
+    clinicData.pacientes.forEach((p,i)=>{
+        if(y>270){doc.addPage();y=20;}
+        doc.setFontSize(11); doc.setTextColor(0);
+        doc.text(`${i+1}. ${p.nombre} ${p.apellido}`,20,y);
+        doc.setFontSize(9); doc.setTextColor(100);
+        doc.text(`   Doc: ${p.doc}  |  Citas: ${p.citas}  |  Total: S/ ${p.totalGastado}`,20,y+5);
+        doc.setTextColor(0); y+=13;
+    });
+    if(clinicData.citas.length){
+        if(y>240){doc.addPage();y=20;}
+        doc.setFontSize(13); doc.setTextColor(0); doc.text('CITAS',20,y+6); y+=14;
+        clinicData.citas.forEach((c,i)=>{
+            if(y>270){doc.addPage();y=20;}
+            const p=clinicData.pacientes.find(x=>x.id===c.pacienteId);
+            doc.setFontSize(10); doc.setTextColor(0);
+            doc.text(`${i+1}. ${p?p.nombre+' '+p.apellido:'?'} - ${c.detalle}`,20,y);
+            doc.setFontSize(9); doc.setTextColor(100);
+            doc.text(`   ${new Date(c.fecha).toLocaleDateString('es-PE')} | S/ ${c.monto} | ${c.estado}`,20,y+5);
+            doc.setTextColor(0); y+=13;
+        });
+    }
+    doc.save(`DentalPro_Reporte_${new Date().toISOString().slice(0,10)}.pdf`);
+    mostrarNotificacion('📄 PDF generado y descargado');
+}
+
+// ============================================================
+//  TRATAMIENTOS
+// ============================================================
+let tratCitaSeleccionada = null;
+let editandoTratId = null;
+let ingresosRows = [];
+let egresosRows = [];
+
+function abrirModalTratamiento() {
+    editandoTratId = null;
+    tratCitaSeleccionada = null;
+    ingresosRows = [];
+    egresosRows = [];
+    document.getElementById('trat-buscar-cita').value = '';
+    document.getElementById('trat-buscar-cita').style.display = 'block';
+    document.getElementById('trat-cita-info').style.display = 'none';
+    document.getElementById('trat-cita-id').value = '';
+    document.getElementById('trat-pac-id').value = '';
+    document.getElementById('trat-nombre').value = '';
+    document.getElementById('trat-desc').value = '';
+    document.getElementById('trat-estado').value = 'En curso';
+    document.getElementById('trat-error-msg').style.display = 'none';
+    document.getElementById('modal-trat-title').textContent = '💉 Registrar Tratamiento';
+    document.getElementById('btn-trat-submit').textContent = '💉 Guardar Tratamiento';
+    renderFilasIngresos();
+    renderFilasEgresos();
+    document.getElementById('modal-trat').style.display = 'flex';
+    setTimeout(() => document.getElementById('trat-buscar-cita').focus(), 100);
+}
+
+function cerrarModalTrat() {
+    document.getElementById('modal-trat').style.display = 'none';
+}
+
+function buscarCitaTrat() {
+    const q = document.getElementById('trat-buscar-cita').value.toLowerCase().trim();
+    const dd = document.getElementById('trat-cita-dropdown');
+    if (!q) { dd.style.display = 'none'; return; }
+    const res = clinicData.citas.filter(c => {
+        const p = clinicData.pacientes.find(x => x.id === c.pacienteId);
+        const nombre = p ? `${p.nombre} ${p.apellido}`.toLowerCase() : '';
+        const doc = p ? p.doc : '';
+        const nCita = String(getCitaNum(c.id));
+        return nombre.includes(q) || doc.includes(q) || nCita.includes(q) || c.detalle.toLowerCase().includes(q);
+    }).slice(0, 6);
+
+    if (!res.length) {
+        dd.innerHTML = '<div class="search-item" style="color:#9ca3af;cursor:default;">No se encontraron citas</div>';
+        dd.style.display = 'block'; return;
+    }
+    const colores = ['#4f46e5','#10b981','#f97316','#ec4899','#06b6d4','#8b5cf6'];
+    dd.innerHTML = res.map(c => {
+        const p = clinicData.pacientes.find(x => x.id === c.pacienteId);
+        const col = p ? colores[p.id % colores.length] : '#9ca3af';
+        const av = p ? `${p.nombre.charAt(0)}${p.apellido.charAt(0)}`.toUpperCase() : '??';
+        const nCita = getCitaNum(c.id);
+        return `<div class="search-item" onclick="seleccionarCitaTrat(${c.id})">
+            <div style="width:32px;height:32px;background:${col};border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700;flex-shrink:0;">${av}</div>
+            <div>
+                <div style="font-weight:700;">#${nCita} · ${p ? p.nombre+' '+p.apellido : 'Paciente'}</div>
+                <div style="font-size:11px;color:#9ca3af;">${c.detalle} · ${new Date(c.fecha).toLocaleDateString('es-PE')}${p?' · Doc: '+p.doc:''}</div>
+            </div>
+        </div>`;
+    }).join('');
+    dd.style.display = 'block';
+}
+
+function getCitaNum(citaId) {
+    const idx = clinicData.citas.findIndex(c => c.id === citaId);
+    return idx >= 0 ? idx + 1 : '?';
+}
+
+function seleccionarCitaTrat(citaId) {
+    const c = clinicData.citas.find(x => x.id === citaId);
+    if (!c) return;
+    const p = clinicData.pacientes.find(x => x.id === c.pacienteId);
+    tratCitaSeleccionada = c;
+    document.getElementById('trat-cita-id').value = c.id;
+    document.getElementById('trat-pac-id').value = c.pacienteId;
+    document.getElementById('trat-cita-dropdown').style.display = 'none';
+    document.getElementById('trat-buscar-cita').style.display = 'none';
+
+    const colores = ['#4f46e5','#10b981','#f97316','#ec4899','#06b6d4','#8b5cf6'];
+    const col = p ? colores[p.id % colores.length] : '#9ca3af';
+    const av = p ? `${p.nombre.charAt(0)}${p.apellido.charAt(0)}`.toUpperCase() : '??';
+    const edad = p && p.fechaNac ? calcularEdad(p.fechaNac) : '—';
+    document.getElementById('trat-pac-avatar').style.background = col;
+    document.getElementById('trat-pac-avatar').textContent = av;
+    document.getElementById('trat-show-nombre').textContent = p ? `${p.nombre} ${p.apellido}` : 'Paciente';
+    document.getElementById('trat-show-doc').textContent = p ? p.doc : '—';
+    document.getElementById('trat-show-edad').textContent = edad;
+    document.getElementById('trat-show-ncita').textContent = getCitaNum(c.id);
+    document.getElementById('trat-show-fecha').textContent = new Date(c.fecha).toLocaleDateString('es-PE', {day:'2-digit',month:'short',year:'numeric'});
+    document.getElementById('trat-show-detalle').textContent = c.detalle;
+    document.getElementById('trat-cita-info').style.display = 'block';
+    if (!document.getElementById('trat-nombre').value) {
+        document.getElementById('trat-nombre').value = c.detalle;
+    }
+}
+
+function limpiarCitaTrat() {
+    tratCitaSeleccionada = null;
+    document.getElementById('trat-cita-id').value = '';
+    document.getElementById('trat-pac-id').value = '';
+    document.getElementById('trat-cita-info').style.display = 'none';
+    document.getElementById('trat-buscar-cita').style.display = 'block';
+    document.getElementById('trat-buscar-cita').value = '';
+    document.getElementById('trat-buscar-cita').focus();
+}
+
+document.addEventListener('click', e => {
+    const dd = document.getElementById('trat-cita-dropdown');
+    const inp = document.getElementById('trat-buscar-cita');
+    if (dd && !dd.contains(e.target) && e.target !== inp) dd.style.display = 'none';
+});
+
+// --- Filas ingresos/egresos ---
+function agregarFilaIngreso() {
+    ingresosRows.push({ id: Date.now() + Math.random(), nombre: '', cantidad: 1, unidad: 'unidad', precio: 0 });
+    renderFilasIngresos();
+}
+function agregarFilaEgreso() {
+    egresosRows.push({ id: Date.now() + Math.random(), nombre: '', cantidad: 1, unidad: 'unidad', precio: 0 });
+    renderFilasEgresos();
+}
+
+const unidadesOpts = ['unidad','caja','frasco','ampolla','tubo','ml','mg','g','par','kit'].map(u => `<option value="${u}">${u}</option>`).join('');
+
+function renderFilasIngresos() {
+    const tbody = document.getElementById('trat-ingresos-tbody');
+    if (!ingresosRows.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:16px;font-size:13px;">Sin insumos agregados — haz clic en "+ Agregar"</td></tr>`;
+        document.getElementById('trat-total-ing').textContent = 'S/ 0.00';
+        return;
+    }
+    tbody.innerHTML = ingresosRows.map((r, i) => {
+        const sub = (r.cantidad * r.precio).toFixed(2);
+        return `<tr>
+            <td><input class="input-field" style="padding:7px 10px;font-size:12px;" placeholder="Ej: Brackets metálicos" value="${r.nombre}" oninput="ingresosRows[${i}].nombre=this.value"></td>
+            <td><input class="input-field" type="number" min="0" step="0.01" style="padding:7px 10px;font-size:12px;" value="${r.cantidad}" oninput="ingresosRows[${i}].cantidad=parseFloat(this.value)||0;recalcIngTotales()"></td>
+            <td><select class="input-field" style="padding:7px 10px;font-size:12px;" onchange="ingresosRows[${i}].unidad=this.value">${unidadesOpts.replace(`value="${r.unidad}"`,`value="${r.unidad}" selected`)}</select></td>
+            <td><input class="input-field" type="number" min="0" step="0.01" style="padding:7px 10px;font-size:12px;" placeholder="0.00" value="${r.precio}" oninput="ingresosRows[${i}].precio=parseFloat(this.value)||0;recalcIngTotales()"></td>
+            <td style="font-weight:700;color:#16a34a;font-size:12px;">S/ ${sub}</td>
+            <td><button type="button" onclick="ingresosRows.splice(${i},1);renderFilasIngresos()" style="background:#fef2f2;color:#dc2626;border:none;border-radius:7px;padding:5px 8px;cursor:pointer;font-size:12px;">✕</button></td>
+        </tr>`;
+    }).join('');
+    recalcIngTotales();
+}
+
+function renderFilasEgresos() {
+    const tbody = document.getElementById('trat-egresos-tbody');
+    if (!egresosRows.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:16px;font-size:13px;">Sin egresos agregados — haz clic en "+ Agregar"</td></tr>`;
+        document.getElementById('trat-total-egr').textContent = 'S/ 0.00';
+        return;
+    }
+    tbody.innerHTML = egresosRows.map((r, i) => {
+        const sub = (r.cantidad * r.precio).toFixed(2);
+        return `<tr>
+            <td><input class="input-field" style="padding:7px 10px;font-size:12px;" placeholder="Ej: Material de composite" value="${r.nombre}" oninput="egresosRows[${i}].nombre=this.value"></td>
+            <td><input class="input-field" type="number" min="0" step="0.01" style="padding:7px 10px;font-size:12px;" value="${r.cantidad}" oninput="egresosRows[${i}].cantidad=parseFloat(this.value)||0;recalcEgrTotales()"></td>
+            <td><select class="input-field" style="padding:7px 10px;font-size:12px;" onchange="egresosRows[${i}].unidad=this.value">${unidadesOpts.replace(`value="${r.unidad}"`,`value="${r.unidad}" selected`)}</select></td>
+            <td><input class="input-field" type="number" min="0" step="0.01" style="padding:7px 10px;font-size:12px;" placeholder="0.00" value="${r.precio}" oninput="egresosRows[${i}].precio=parseFloat(this.value)||0;recalcEgrTotales()"></td>
+            <td style="font-weight:700;color:#dc2626;font-size:12px;">S/ ${sub}</td>
+            <td><button type="button" onclick="egresosRows.splice(${i},1);renderFilasEgresos()" style="background:#fef2f2;color:#dc2626;border:none;border-radius:7px;padding:5px 8px;cursor:pointer;font-size:12px;">✕</button></td>
+        </tr>`;
+    }).join('');
+    recalcEgrTotales();
+}
+
+function recalcIngTotales() {
+    const total = ingresosRows.reduce((s, r) => s + (r.cantidad * r.precio), 0);
+    document.getElementById('trat-total-ing').textContent = `S/ ${total.toFixed(2)}`;
+}
+function recalcEgrTotales() {
+    const total = egresosRows.reduce((s, r) => s + (r.cantidad * r.precio), 0);
+    document.getElementById('trat-total-egr').textContent = `S/ ${total.toFixed(2)}`;
+}
+
+function guardarTratamiento() {
+    const citaId = parseInt(document.getElementById('trat-cita-id').value);
+    const pacId = parseInt(document.getElementById('trat-pac-id').value);
+    const nombre = document.getElementById('trat-nombre').value.trim();
+    const desc = document.getElementById('trat-desc').value.trim();
+    const estado = document.getElementById('trat-estado').value;
+
+    const errEl = document.getElementById('trat-error-msg');
+    errEl.style.display = 'none';
+    if (!citaId) { errEl.textContent = 'Debes seleccionar una cita.'; errEl.style.display = 'block'; return; }
+    if (!nombre) { errEl.textContent = 'Ingresa el nombre del tratamiento.'; errEl.style.display = 'block'; return; }
+
+    const totalIngresos = ingresosRows.reduce((s, r) => s + r.cantidad * r.precio, 0);
+    const totalEgresos = egresosRows.reduce((s, r) => s + r.cantidad * r.precio, 0);
+
+    const obj = {
+        citaId, pacienteId: pacId, nombre, desc, estado,
+        ingresos: JSON.parse(JSON.stringify(ingresosRows)),
+        egresos: JSON.parse(JSON.stringify(egresosRows)),
+        totalIngresos, totalEgresos,
+        utilidad: totalIngresos - totalEgresos
+    };
+
+    if (editandoTratId) {
+        const idx = clinicData.tratamientos.findIndex(t => t.id === editandoTratId);
+        if (idx >= 0) clinicData.tratamientos[idx] = { ...clinicData.tratamientos[idx], ...obj };
+        mostrarNotificacion('✏️ Tratamiento actualizado');
+        editandoTratId = null;
+    } else {
+        obj.id = Date.now();
+        clinicData.tratamientos.push(obj);
+        mostrarNotificacion('✅ Tratamiento registrado');
+    }
+    cerrarModalTrat();
+    renderKpiTratamientos();
+    renderTratamientos();
+    actualizarDashboard();
+    // refresh ing-egr if visible
+    if(!document.getElementById('ing-egr').classList.contains('hidden')){ renderKpiIngEgr(); renderIngEgr(); }
+}
+
+// --- KPIs tratamientos ---
+function renderKpiTratamientos() {
+    const total = clinicData.tratamientos.length;
+    const enCurso = clinicData.tratamientos.filter(t => t.estado === 'En curso').length;
+    const totalIng = clinicData.tratamientos.reduce((s, t) => s + t.totalIngresos, 0);
+    const totalEgr = clinicData.tratamientos.reduce((s, t) => s + t.totalEgresos, 0);
+    const utilidad = totalIng - totalEgr;
+    const el = document.getElementById('kpi-tratamientos');
+    if (!el) return;
+    el.innerHTML = `
+        <div class="kpi" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);box-shadow:0 5px 16px rgba(124,58,237,0.3);">
+            <div style="font-size:22px;margin-bottom:4px;">💉</div>
+            <div style="font-size:28px;font-weight:800;">${total}</div>
+            <div style="opacity:0.85;font-size:12px;margin-top:2px;">Tratamientos</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,#f97316,#ea580c);box-shadow:0 5px 16px rgba(249,115,22,0.3);">
+            <div style="font-size:22px;margin-bottom:4px;">⚙️</div>
+            <div style="font-size:28px;font-weight:800;">${enCurso}</div>
+            <div style="opacity:0.85;font-size:12px;margin-top:2px;">En curso</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 5px 16px rgba(16,185,129,0.3);">
+            <div style="font-size:22px;margin-bottom:4px;">💰</div>
+            <div style="font-size:28px;font-weight:800;">S/ ${totalIng.toLocaleString()}</div>
+            <div style="opacity:0.85;font-size:12px;margin-top:2px;">Total Ingresos</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 5px 16px rgba(220,38,38,0.3);">
+            <div style="font-size:22px;margin-bottom:4px;">📤</div>
+            <div style="font-size:28px;font-weight:800;">S/ ${totalEgr.toLocaleString()}</div>
+            <div style="opacity:0.85;font-size:12px;margin-top:2px;">Total Egresos</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,#0891b2,#0e7490);box-shadow:0 5px 16px rgba(8,145,178,0.3);">
+            <div style="font-size:22px;margin-bottom:4px;">📊</div>
+            <div style="font-size:28px;font-weight:800;">S/ ${utilidad.toLocaleString()}</div>
+            <div style="opacity:0.85;font-size:12px;margin-top:2px;">Utilidad Neta</div>
+        </div>
+    `;
+}
+
+// --- Render lista tratamientos ---
+function renderTratamientos() {
+    const buscar = (document.getElementById('buscar-tratamientos')?.value || '').toLowerCase();
+    const filtroEst = document.getElementById('filtro-trat-estado')?.value || '';
+
+    let lista = clinicData.tratamientos.filter(t => {
+        const p = clinicData.pacientes.find(x => x.id === t.pacienteId);
+        const nombre = p ? `${p.nombre} ${p.apellido}`.toLowerCase() : '';
+        const doc = p ? p.doc : '';
+        const nCita = String(getCitaNum(t.citaId));
+        const matchB = nombre.includes(buscar) || doc.includes(buscar) || t.nombre.toLowerCase().includes(buscar) || nCita.includes(buscar);
+        const matchE = !filtroEst || t.estado === filtroEst;
+        return matchB && matchE;
+    });
+
+    const contenedor = document.getElementById('trat-lista');
+    const empty = document.getElementById('trat-empty');
+
+    if (!lista.length) {
+        contenedor.innerHTML = '';
+        if (empty) empty.style.display = 'block';
+        return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    const colores = ['#4f46e5','#10b981','#f97316','#ec4899','#06b6d4','#8b5cf6'];
+
+    contenedor.innerHTML = [...lista].reverse().map(t => {
+        const p = clinicData.pacientes.find(x => x.id === t.pacienteId);
+        const cita = clinicData.citas.find(x => x.id === t.citaId);
+        const nombre = p ? `${p.nombre} ${p.apellido}` : 'Paciente';
+        const doc = p ? p.doc : '—';
+        const edad = p && p.fechaNac ? calcularEdad(p.fechaNac) : '—';
+        const col = p ? colores[p.id % colores.length] : '#9ca3af';
+        const av = p ? `${p.nombre.charAt(0)}${p.apellido.charAt(0)}`.toUpperCase() : '??';
+        const nCita = getCitaNum(t.citaId);
+        const estadoCls = t.estado === 'Completado' ? 'badge-green' : t.estado === 'Cancelado' ? 'status-cancel' : 'badge-orange';
+        const utilidad = t.utilidad;
+        const utilColor = utilidad >= 0 ? '#059669' : '#dc2626';
+
+        return `<div class="card" style="margin-bottom:18px;padding:0;overflow:hidden;">
+            <!-- Header del tratamiento -->
+            <div style="padding:0;border-bottom:1px solid #f1f5f9;">
+                <!-- Banda superior: N° cita + datos del paciente -->
+                <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:12px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                    <div style="background:rgba(255,255,255,0.2);border-radius:12px;padding:6px 14px;display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:18px;">📋</span>
+                        <div>
+                            <div style="font-size:10px;color:rgba(255,255,255,0.75);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">N° Cita</div>
+                            <div style="font-size:20px;font-weight:800;color:white;line-height:1;">#${nCita}</div>
+                        </div>
+                    </div>
+                    <div style="width:1px;height:40px;background:rgba(255,255,255,0.2);"></div>
+                    <div style="width:40px;height:40px;background:rgba(255,255,255,0.25);border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:13px;flex-shrink:0;">${av}</div>
+                    <div style="flex:1;min-width:150px;">
+                        <div style="font-size:15px;font-weight:800;color:white;">${nombre}</div>
+                        <div style="display:flex;gap:12px;margin-top:3px;flex-wrap:wrap;">
+                            <span style="font-size:11px;color:rgba(255,255,255,0.8);">🆔 Doc: <b style="color:white;">${doc}</b></span>
+                            <span style="font-size:11px;color:rgba(255,255,255,0.8);">🎂 Edad: <b style="color:white;">${edad} años</b></span>
+                            <span style="font-size:11px;color:rgba(255,255,255,0.8);">🦷 <b style="color:white;">${cita ? cita.detalle : '—'}</b></span>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button class="btn-sm btn-view" onclick="verDetalleTratamiento(${t.id})" title="Ver detalle" style="background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.3);">👁️</button>
+                        <button class="btn-sm btn-edit" onclick="editarTratamiento(${t.id})" title="Editar" style="background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.3);">✏️</button>
+                        <button class="btn-sm btn-delete" onclick="eliminarTratamiento(${t.id})" title="Eliminar" style="background:rgba(255,100,100,0.35);color:white;border:1px solid rgba(255,100,100,0.4);">🗑️</button>
+                    </div>
+                </div>
+                <!-- Segunda banda: nombre tratamiento + utilidad -->
+                <div style="padding:12px 22px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fafbff;">
+                    <div style="flex:1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        <div style="font-size:15px;font-weight:800;color:#111;">💉 ${t.nombre}</div>
+                        <span class="badge ${estadoCls}">${t.estado}</span>
+                    </div>
+                    ${t.desc ? `<div style="font-size:12px;color:#6b7280;width:100%;">📝 ${t.desc}</div>` : ''}
+                    <div style="text-align:right;">
+                        <div style="font-size:10px;color:#9ca3af;font-weight:700;text-transform:uppercase;">Utilidad Neta</div>
+                        <div style="font-size:18px;font-weight:800;color:${utilColor};">S/ ${utilidad.toFixed(2)}</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Tablas inline resumidas -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+                <!-- Ingresos mini-tabla -->
+                <div style="padding:16px 18px;border-right:1px solid #f1f5f9;">
+                    <div style="font-size:12px;font-weight:800;color:#16a34a;margin-bottom:10px;">💰 INGRESOS — Insumos</div>
+                    ${t.ingresos.length ? `
+                    <table style="font-size:12px;">
+                        <thead><tr style="background:#f0fdf4;">
+                            <th style="color:#16a34a;padding:6px 8px;">Insumo</th>
+                            <th style="color:#16a34a;padding:6px 8px;width:60px;">Cant.</th>
+                            <th style="color:#16a34a;padding:6px 8px;width:70px;">Unidad</th>
+                            <th style="color:#16a34a;padding:6px 8px;width:80px;">Precio</th>
+                        </tr></thead>
+                        <tbody>${t.ingresos.map(r => `<tr>
+                            <td style="padding:5px 8px;">${r.nombre||'—'}</td>
+                            <td style="padding:5px 8px;">${r.cantidad}</td>
+                            <td style="padding:5px 8px;">${r.unidad}</td>
+                            <td style="padding:5px 8px;font-weight:700;color:#059669;">S/ ${(r.cantidad*r.precio).toFixed(2)}</td>
+                        </tr>`).join('')}</tbody>
+                        <tfoot><tr style="border-top:2px solid #dcfce7;">
+                            <td colspan="3" style="padding:6px 8px;text-align:right;font-weight:800;color:#16a34a;">Total:</td>
+                            <td style="padding:6px 8px;font-weight:800;color:#16a34a;">S/ ${t.totalIngresos.toFixed(2)}</td>
+                        </tr></tfoot>
+                    </table>` : '<div style="color:#9ca3af;font-size:12px;padding:8px 0;">Sin insumos registrados</div>'}
+                </div>
+                <!-- Egresos mini-tabla -->
+                <div style="padding:16px 18px;">
+                    <div style="font-size:12px;font-weight:800;color:#dc2626;margin-bottom:10px;">📤 EGRESOS — Costos</div>
+                    ${t.egresos.length ? `
+                    <table style="font-size:12px;">
+                        <thead><tr style="background:#fef2f2;">
+                            <th style="color:#dc2626;padding:6px 8px;">Concepto</th>
+                            <th style="color:#dc2626;padding:6px 8px;width:60px;">Cant.</th>
+                            <th style="color:#dc2626;padding:6px 8px;width:70px;">Unidad</th>
+                            <th style="color:#dc2626;padding:6px 8px;width:80px;">Precio</th>
+                        </tr></thead>
+                        <tbody>${t.egresos.map(r => `<tr>
+                            <td style="padding:5px 8px;">${r.nombre||'—'}</td>
+                            <td style="padding:5px 8px;">${r.cantidad}</td>
+                            <td style="padding:5px 8px;">${r.unidad}</td>
+                            <td style="padding:5px 8px;font-weight:700;color:#dc2626;">S/ ${(r.cantidad*r.precio).toFixed(2)}</td>
+                        </tr>`).join('')}</tbody>
+                        <tfoot><tr style="border-top:2px solid #fecaca;">
+                            <td colspan="3" style="padding:6px 8px;text-align:right;font-weight:800;color:#dc2626;">Total:</td>
+                            <td style="padding:6px 8px;font-weight:800;color:#dc2626;">S/ ${t.totalEgresos.toFixed(2)}</td>
+                        </tr></tfoot>
+                    </table>` : '<div style="color:#9ca3af;font-size:12px;padding:8px 0;">Sin egresos registrados</div>'}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function verDetalleTratamiento(id) {
+    const t = clinicData.tratamientos.find(x => x.id === id); if (!t) return;
+    const p = clinicData.pacientes.find(x => x.id === t.pacienteId);
+    const cita = clinicData.citas.find(x => x.id === t.citaId);
+    const nCita = getCitaNum(t.citaId);
+    const estadoCls = t.estado === 'Completado' ? 'badge-green' : t.estado === 'Cancelado' ? 'status-cancel' : 'badge-orange';
+    document.getElementById('trat-detalle-titulo').textContent = `💉 ${t.nombre}`;
+    document.getElementById('trat-detalle-contenido').innerHTML = `
+        <div style="background:#f0f4ff;border-radius:14px;padding:16px 18px;margin-bottom:18px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            ${dc('👤 Paciente', p ? p.nombre+' '+p.apellido : '—')}
+            ${dc('🆔 Documento', p ? p.doc : '—')}
+            ${dc('🎂 Edad', p && p.fechaNac ? calcularEdad(p.fechaNac) : '—')}
+            ${dc('📋 Cita #'+nCita, cita ? cita.detalle : '—')}
+            ${dc('📅 Fecha Cita', cita ? new Date(cita.fecha).toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'}) : '—')}
+            <div style="background:#f8fafc;border-radius:12px;padding:12px;display:flex;align-items:center;gap:8px;"><div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:3px;">Estado</div><span class="badge ${estadoCls}">${t.estado}</span></div>
+            ${t.desc ? `<div style="grid-column:1/-1;">${dc('📝 Notas', t.desc)}</div>` : ''}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:16px;">
+                <div style="font-weight:800;color:#16a34a;margin-bottom:12px;font-size:13px;">💰 INGRESOS — Insumos del Paciente</div>
+                <table style="font-size:12px;width:100%;">
+                    <thead><tr style="background:#dcfce7;"><th style="color:#16a34a;padding:6px 8px;">Insumo</th><th style="color:#16a34a;padding:6px 8px;">Cant.</th><th style="color:#16a34a;padding:6px 8px;">Unidad</th><th style="color:#16a34a;padding:6px 8px;">Precio</th><th style="color:#16a34a;padding:6px 8px;">Subtotal</th></tr></thead>
+                    <tbody>${t.ingresos.map(r=>`<tr><td style="padding:5px 8px;">${r.nombre||'—'}</td><td style="padding:5px 8px;">${r.cantidad}</td><td style="padding:5px 8px;">${r.unidad}</td><td style="padding:5px 8px;">S/ ${parseFloat(r.precio).toFixed(2)}</td><td style="padding:5px 8px;font-weight:700;color:#059669;">S/ ${(r.cantidad*r.precio).toFixed(2)}</td></tr>`).join('')}</tbody>
+                    <tfoot><tr style="border-top:2px solid #16a34a;"><td colspan="4" style="padding:8px;text-align:right;font-weight:800;color:#16a34a;">TOTAL INGRESOS:</td><td style="padding:8px;font-weight:800;color:#16a34a;font-size:14px;">S/ ${t.totalIngresos.toFixed(2)}</td></tr></tfoot>
+                </table>
+            </div>
+            <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:16px;">
+                <div style="font-weight:800;color:#dc2626;margin-bottom:12px;font-size:13px;">📤 EGRESOS — Costos de la Clínica</div>
+                <table style="font-size:12px;width:100%;">
+                    <thead><tr style="background:#fee2e2;"><th style="color:#dc2626;padding:6px 8px;">Concepto</th><th style="color:#dc2626;padding:6px 8px;">Cant.</th><th style="color:#dc2626;padding:6px 8px;">Unidad</th><th style="color:#dc2626;padding:6px 8px;">Precio</th><th style="color:#dc2626;padding:6px 8px;">Subtotal</th></tr></thead>
+                    <tbody>${t.egresos.map(r=>`<tr><td style="padding:5px 8px;">${r.nombre||'—'}</td><td style="padding:5px 8px;">${r.cantidad}</td><td style="padding:5px 8px;">${r.unidad}</td><td style="padding:5px 8px;">S/ ${parseFloat(r.precio).toFixed(2)}</td><td style="padding:5px 8px;font-weight:700;color:#dc2626;">S/ ${(r.cantidad*r.precio).toFixed(2)}</td></tr>`).join('')}</tbody>
+                    <tfoot><tr style="border-top:2px solid #dc2626;"><td colspan="4" style="padding:8px;text-align:right;font-weight:800;color:#dc2626;">TOTAL EGRESOS:</td><td style="padding:8px;font-weight:800;color:#dc2626;font-size:14px;">S/ ${t.totalEgresos.toFixed(2)}</td></tr></tfoot>
+                </table>
+            </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+            <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;border-radius:14px;padding:14px 28px;text-align:center;">
+                <div style="font-size:11px;opacity:0.8;">UTILIDAD NETA</div>
+                <div style="font-size:22px;font-weight:800;">S/ ${t.utilidad.toFixed(2)}</div>
+            </div>
+        </div>
+    `;
+    document.getElementById('modal-trat-detalle').style.display = 'flex';
+}
+
+function editarTratamiento(id) {
+    const t = clinicData.tratamientos.find(x => x.id === id); if (!t) return;
+    editandoTratId = id;
+    ingresosRows = JSON.parse(JSON.stringify(t.ingresos));
+    egresosRows = JSON.parse(JSON.stringify(t.egresos));
+    document.getElementById('trat-cita-id').value = t.citaId;
+    document.getElementById('trat-pac-id').value = t.pacienteId;
+    document.getElementById('trat-nombre').value = t.nombre;
+    document.getElementById('trat-desc').value = t.desc || '';
+    document.getElementById('trat-estado').value = t.estado;
+    document.getElementById('modal-trat-title').textContent = '✏️ Editar Tratamiento';
+    document.getElementById('btn-trat-submit').textContent = '💾 Actualizar Tratamiento';
+    document.getElementById('trat-error-msg').style.display = 'none';
+    // Mostrar info de la cita
+    seleccionarCitaTrat(t.citaId);
+    renderFilasIngresos();
+    renderFilasEgresos();
+    document.getElementById('modal-trat').style.display = 'flex';
+}
+
+function eliminarTratamiento(id) {
+    const t = clinicData.tratamientos.find(x => x.id === id); if (!t) return;
+    if (!confirm(`¿Eliminar el tratamiento "${t.nombre}"?`)) return;
+    clinicData.tratamientos = clinicData.tratamientos.filter(x => x.id !== id);
+    renderKpiTratamientos(); renderTratamientos(); actualizarDashboard();
+    mostrarNotificacion('🗑️ Tratamiento eliminado');
+}
+
+function exportarTratamientos() {
+    const wb = XLSX.utils.book_new();
+    const resumen = clinicData.tratamientos.map(t => {
+        const p = clinicData.pacientes.find(x => x.id === t.pacienteId);
+        const nCita = getCitaNum(t.citaId);
+        return {
+            'Tratamiento': t.nombre, 'Paciente': p ? p.nombre+' '+p.apellido : '—',
+            'Documento': p ? p.doc : '—', 'Cita #': nCita, 'Estado': t.estado,
+            'Total Ingresos': t.totalIngresos, 'Total Egresos': t.totalEgresos, 'Utilidad': t.utilidad
+        };
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumen.length ? resumen : [{info:'Sin tratamientos'}]), 'Resumen');
+
+    const ingData = [];
+    clinicData.tratamientos.forEach(t => {
+        const p = clinicData.pacientes.find(x => x.id === t.pacienteId);
+        t.ingresos.forEach(r => ingData.push({
+            'Tratamiento': t.nombre, 'Paciente': p ? p.nombre+' '+p.apellido : '—',
+            'Insumo': r.nombre, 'Cantidad': r.cantidad, 'Unidad': r.unidad,
+            'Precio Unit.': r.precio, 'Subtotal': r.cantidad * r.precio
+        }));
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ingData.length ? ingData : [{info:'Sin ingresos'}]), 'Ingresos');
+
+    const egrData = [];
+    clinicData.tratamientos.forEach(t => {
+        const p = clinicData.pacientes.find(x => x.id === t.pacienteId);
+        t.egresos.forEach(r => egrData.push({
+            'Tratamiento': t.nombre, 'Paciente': p ? p.nombre+' '+p.apellido : '—',
+            'Concepto': r.nombre, 'Cantidad': r.cantidad, 'Unidad': r.unidad,
+            'Precio Unit.': r.precio, 'Subtotal': r.cantidad * r.precio
+        }));
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(egrData.length ? egrData : [{info:'Sin egresos'}]), 'Egresos');
+    XLSX.writeFile(wb, `DentalPro_Tratamientos_${new Date().toISOString().slice(0,10)}.xlsx`);
+    mostrarNotificacion('📊 Excel de Tratamientos descargado');
+}
+
+// ============================================================
+// ============================================================
+let chartInst = null;
+function initChart() {
+    const ctx = document.getElementById('chartIngresos'); if(!ctx) return;
+    if(chartInst) chartInst.destroy();
+    chartInst = new Chart(ctx, {
+        type:'doughnut',
+        data:{ labels:['Limpiezas','Empastes','Blanqueamiento','Ortodoncia'],
+            datasets:[{data:[12000,18000,15000,8000],backgroundColor:['#10b981','#4f46e5','#f97316','#8b5cf6'],borderWidth:0,hoverOffset:8}]},
+        options:{responsive:true,cutout:'65%',plugins:{legend:{position:'bottom',labels:{padding:18,usePointStyle:true,font:{size:12}}}}}
+    });
+}
+
+// ============================================================
+//  INGRESOS & EGRESOS DE TRATAMIENTOS
+// ============================================================
+function renderKpiIngEgr() {
+    const allIng = [];
+    const allEgr = [];
+    clinicData.tratamientos.forEach(t => {
+        t.ingresos.forEach(r => allIng.push({...r, tratamiento: t, subtotal: r.cantidad * r.precio}));
+        t.egresos.forEach(r => allEgr.push({...r, tratamiento: t, subtotal: r.cantidad * r.precio}));
+    });
+    const totalIng = allIng.reduce((s,r)=>s+r.subtotal,0);
+    const totalEgr = allEgr.reduce((s,r)=>s+r.subtotal,0);
+    const utilidad = totalIng - totalEgr;
+    const el = document.getElementById('kpi-ing-egr'); if(!el) return;
+    el.innerHTML = `
+        <div class="kpi" style="background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 5px 16px rgba(16,185,129,0.3);">
+            <div style="font-size:22px;margin-bottom:4px;">💰</div>
+            <div style="font-size:26px;font-weight:800;">S/ ${totalIng.toLocaleString('es-PE',{minimumFractionDigits:2})}</div>
+            <div style="opacity:0.85;font-size:12px;margin-top:2px;">Total Ingresos Medicamentos</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 5px 16px rgba(220,38,38,0.3);">
+            <div style="font-size:22px;margin-bottom:4px;">📤</div>
+            <div style="font-size:26px;font-weight:800;">S/ ${totalEgr.toLocaleString('es-PE',{minimumFractionDigits:2})}</div>
+            <div style="opacity:0.85;font-size:12px;margin-top:2px;">Total Egresos Clínica</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,${utilidad>=0?'#4f46e5,#7c3aed':'#dc2626,#b91c1c'});box-shadow:0 5px 16px rgba(79,70,229,0.3);">
+            <div style="font-size:22px;margin-bottom:4px;">📊</div>
+            <div style="font-size:26px;font-weight:800;">S/ ${Math.abs(utilidad).toLocaleString('es-PE',{minimumFractionDigits:2})}</div>
+            <div style="opacity:0.85;font-size:12px;margin-top:2px;">Utilidad Neta ${utilidad<0?'(Pérdida)':''}</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,#f97316,#ea580c);box-shadow:0 5px 16px rgba(249,115,22,0.3);">
+            <div style="font-size:22px;margin-bottom:4px;">📦</div>
+            <div style="font-size:26px;font-weight:800;">${allIng.length + allEgr.length}</div>
+            <div style="opacity:0.85;font-size:12px;margin-top:2px;">Registros totales</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,#0891b2,#0e7490);box-shadow:0 5px 16px rgba(8,145,178,0.3);">
+            <div style="font-size:22px;margin-bottom:4px;">💉</div>
+            <div style="font-size:26px;font-weight:800;">${clinicData.tratamientos.length}</div>
+            <div style="opacity:0.85;font-size:12px;margin-top:2px;">Tratamientos con registro</div>
+        </div>
+    `;
+}
+
+function renderIngEgr() {
+    const buscar = (document.getElementById('buscar-ing-egr')?.value||'').toLowerCase();
+    const tipo = document.getElementById('filtro-ing-egr-tipo')?.value||'';
+    const colores = ['#4f46e5','#10b981','#f97316','#ec4899','#06b6d4','#8b5cf6'];
+
+    // Build flat rows
+    const ingRows = [], egrRows = [];
+    clinicData.tratamientos.forEach(t => {
+        const p = clinicData.pacientes.find(x=>x.id===t.pacienteId);
+        const nCita = getCitaNum(t.citaId);
+        const nomPac = p?`${p.nombre} ${p.apellido}`:'—';
+        const doc = p?p.doc:'—';
+        const matchBuscar = r => nomPac.toLowerCase().includes(buscar) || doc.includes(buscar) || r.nombre.toLowerCase().includes(buscar) || String(nCita).includes(buscar) || t.nombre.toLowerCase().includes(buscar);
+        t.ingresos.forEach(r => { if(matchBuscar(r)) ingRows.push({r, t, p, nCita, nomPac, doc}); });
+        t.egresos.forEach(r => { if(matchBuscar(r)) egrRows.push({r, t, p, nCita, nomPac, doc}); });
+    });
+
+    // Panel ingresos
+    const panelIng = document.getElementById('panel-ingresos-trat');
+    const panelEgr = document.getElementById('panel-egresos-trat');
+    if(panelIng) panelIng.style.display = tipo==='egresos' ? 'none' : 'block';
+    if(panelEgr) panelEgr.style.display = tipo==='ingresos' ? 'none' : 'block';
+
+    // Tabla ingresos
+    const tbodyIng = document.getElementById('tbody-ing-trat');
+    const ingEmpty = document.getElementById('ing-empty');
+    const badgeIngCount = document.getElementById('badge-ing-count');
+    const totalIngEl = document.getElementById('total-ing-trat');
+    if(tbodyIng) {
+        const totalIng = ingRows.reduce((s,x)=>s+(x.r.cantidad*x.r.precio),0);
+        if(badgeIngCount) badgeIngCount.textContent = ingRows.length + ' registros';
+        if(totalIngEl) totalIngEl.textContent = `S/ ${totalIng.toFixed(2)}`;
+        if(!ingRows.length) {
+            tbodyIng.innerHTML=''; if(ingEmpty) ingEmpty.style.display='block';
+        } else {
+            if(ingEmpty) ingEmpty.style.display='none';
+            tbodyIng.innerHTML = ingRows.map((x,i)=>{
+                const col = x.p ? colores[x.p.id % colores.length] : '#9ca3af';
+                const av = x.p ? `${x.p.nombre.charAt(0)}${x.p.apellido.charAt(0)}`.toUpperCase() : '??';
+                return `<tr>
+                    <td style="color:#9ca3af;">${i+1}</td>
+                    <td><span style="background:#ede9fe;color:#7c3aed;font-weight:800;padding:3px 10px;border-radius:10px;font-size:13px;">#${x.nCita}</span></td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="width:30px;height:30px;background:${col};border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:10px;flex-shrink:0;">${av}</div>
+                            <div style="font-weight:700;font-size:13px;">${x.nomPac}</div>
+                        </div>
+                    </td>
+                    <td><span style="font-family:monospace;font-size:12px;background:#f1f5f9;padding:2px 8px;border-radius:6px;">${x.doc}</span></td>
+                    <td style="font-weight:600;color:#7c3aed;">${x.t.nombre}</td>
+                    <td style="font-weight:700;color:#111;">${x.r.nombre||'—'}</td>
+                    <td style="text-align:center;font-weight:700;">${x.r.cantidad}</td>
+                    <td><span class="badge badge-blue">${x.r.unidad}</span></td>
+                    <td style="color:#6b7280;">S/ ${parseFloat(x.r.precio).toFixed(2)}</td>
+                    <td style="text-align:right;font-weight:800;color:#059669;font-size:14px;">S/ ${(x.r.cantidad*x.r.precio).toFixed(2)}</td>
+                </tr>`;
+            }).join('');
+        }
+    }
+
+    // Tabla egresos
+    const tbodyEgr = document.getElementById('tbody-egr-trat');
+    const egrEmpty = document.getElementById('egr-empty');
+    const badgeEgrCount = document.getElementById('badge-egr-count');
+    const totalEgrEl = document.getElementById('total-egr-trat');
+    if(tbodyEgr) {
+        const totalEgr = egrRows.reduce((s,x)=>s+(x.r.cantidad*x.r.precio),0);
+        if(badgeEgrCount) badgeEgrCount.textContent = egrRows.length + ' registros';
+        if(totalEgrEl) totalEgrEl.textContent = `S/ ${totalEgr.toFixed(2)}`;
+        if(!egrRows.length) {
+            tbodyEgr.innerHTML=''; if(egrEmpty) egrEmpty.style.display='block';
+        } else {
+            if(egrEmpty) egrEmpty.style.display='none';
+            tbodyEgr.innerHTML = egrRows.map((x,i)=>{
+                const col = x.p ? colores[x.p.id % colores.length] : '#9ca3af';
+                const av = x.p ? `${x.p.nombre.charAt(0)}${x.p.apellido.charAt(0)}`.toUpperCase() : '??';
+                return `<tr>
+                    <td style="color:#9ca3af;">${i+1}</td>
+                    <td><span style="background:#ede9fe;color:#7c3aed;font-weight:800;padding:3px 10px;border-radius:10px;font-size:13px;">#${x.nCita}</span></td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="width:30px;height:30px;background:${col};border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:10px;flex-shrink:0;">${av}</div>
+                            <div style="font-weight:700;font-size:13px;">${x.nomPac}</div>
+                        </div>
+                    </td>
+                    <td><span style="font-family:monospace;font-size:12px;background:#f1f5f9;padding:2px 8px;border-radius:6px;">${x.doc}</span></td>
+                    <td style="font-weight:600;color:#7c3aed;">${x.t.nombre}</td>
+                    <td style="font-weight:700;color:#111;">${x.r.nombre||'—'}</td>
+                    <td style="text-align:center;font-weight:700;">${x.r.cantidad}</td>
+                    <td><span class="badge badge-orange">${x.r.unidad}</span></td>
+                    <td style="color:#6b7280;">S/ ${parseFloat(x.r.precio).toFixed(2)}</td>
+                    <td style="text-align:right;font-weight:800;color:#dc2626;font-size:14px;">S/ ${(x.r.cantidad*x.r.precio).toFixed(2)}</td>
+                </tr>`;
+            }).join('');
+        }
+    }
+}
+
+function exportarIngEgr() {
+    const wb = XLSX.utils.book_new();
+    const ingData = [];
+    const egrData = [];
+    clinicData.tratamientos.forEach(t => {
+        const p = clinicData.pacientes.find(x=>x.id===t.pacienteId);
+        const nCita = getCitaNum(t.citaId);
+        const nomPac = p?`${p.nombre} ${p.apellido}`:'—';
+        t.ingresos.forEach(r => ingData.push({
+            'Cita #': nCita, 'Paciente': nomPac, 'Documento': p?p.doc:'—',
+            'Tratamiento': t.nombre, 'Insumo/Medicamento': r.nombre,
+            'Cantidad': r.cantidad, 'Unidad': r.unidad,
+            'Precio Unit.': r.precio, 'Subtotal': r.cantidad*r.precio
+        }));
+        t.egresos.forEach(r => egrData.push({
+            'Cita #': nCita, 'Paciente': nomPac, 'Documento': p?p.doc:'—',
+            'Tratamiento': t.nombre, 'Concepto/Insumo': r.nombre,
+            'Cantidad': r.cantidad, 'Unidad': r.unidad,
+            'Precio Unit.': r.precio, 'Subtotal': r.cantidad*r.precio
+        }));
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ingData.length?ingData:[{info:'Sin ingresos'}]), 'Ingresos');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(egrData.length?egrData:[{info:'Sin egresos'}]), 'Egresos');
+    XLSX.writeFile(wb, `DentalPro_IngresosEgresos_${new Date().toISOString().slice(0,10)}.xlsx`);
+    mostrarNotificacion('📊 Excel de Ingresos & Egresos descargado');
+}
+
+// ============================================================
+//  NOTIFICACIÓN
+// ============================================================
+function mostrarNotificacion(msg) {
+    const prev=document.querySelector('.notif'); if(prev) prev.remove();
+    const n=document.createElement('div'); n.className='notif'; n.textContent=msg;
+    document.body.appendChild(n); setTimeout(()=>n.remove(),3200);
+}
+
+// ============================================================
+//  EVENTOS
+// ============================================================
+document.addEventListener('DOMContentLoaded',()=>{
+    const b=document.getElementById('buscar-pacientes');
+    if(b) b.addEventListener('input',actualizarTablaPacientes);
+});
+document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+        cerrarModalPaciente(); cerrarModalCita(); cerrarModalTrat();
+        document.getElementById('modal-detalle').style.display='none';
+        document.getElementById('modal-trat-detalle').style.display='none';
+    }
+});
+</script>
+</body>
+</html>
